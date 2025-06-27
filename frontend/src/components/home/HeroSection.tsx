@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
@@ -42,14 +42,21 @@ export default function HeroSection({
   height = "h-[400px]"
 }: HeroSectionProps) {
   const [scrollY, setScrollY] = useState(0);
+  const isMounted = useRef(true);
   
   useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY);
+      if (isMounted.current) {
+        setScrollY(window.scrollY);
+      }
     };
     
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    
+    return () => {
+      isMounted.current = false;
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const heroVariants: Variants = {
