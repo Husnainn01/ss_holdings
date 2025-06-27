@@ -99,7 +99,13 @@ const getCar = (id: string) => {
   return car;
 };
 
-export default function CarDetailPage({ params }: { params: { id: string } }) {
+interface CarDetailPageProps {
+  params: {
+    id: string;
+  }
+}
+
+export default function CarDetailPage({ params }: CarDetailPageProps) {
   const car = getCar(params.id);
   const [activeTab, setActiveTab] = useState('specifications');
   const [activeImageIndex, setActiveImageIndex] = useState(0);

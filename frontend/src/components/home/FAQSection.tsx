@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
@@ -81,6 +81,7 @@ export default function FAQSection({
   const [searchTerm, setSearchTerm] = useState('');
   const [expandAll, setExpandAll] = useState(false);
   const [expandedItems, setExpandedItems] = useState<number[]>([]);
+  const initialRender = useRef(true);
   
   const filteredFaqs = faqs.filter(faq => {
     if (!searchTerm) return true;
@@ -104,16 +105,21 @@ export default function FAQSection({
 
   // Handle expand all / collapse all
   useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+    
     if (expandAll) {
-      setExpandedItems(filteredFaqs.map((_, index) => index));
+      setExpandedItems(Array.from({ length: filteredFaqs.length }, (_, i) => i));
     } else {
       setExpandedItems([]);
     }
-  }, [expandAll, filteredFaqs]);
+  }, [expandAll, filteredFaqs.length]);
   
   // Reset expanded items when search changes
   useEffect(() => {
-    if (searchTerm) {
+    if (searchTerm && !initialRender.current) {
       setExpandedItems([]);
       setExpandAll(false);
     }

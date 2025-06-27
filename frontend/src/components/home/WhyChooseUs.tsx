@@ -26,16 +26,24 @@ const StatCounter: React.FC<StatCounterProps> = ({ value, label, duration = 2 })
   const [count, setCount] = useState(0);
   
   React.useEffect(() => {
+    let isMounted = true;
+    let interval: NodeJS.Timeout;
+    
     if (count < value) {
-      const interval = setInterval(() => {
-        setCount(prev => {
-          const newValue = prev + Math.ceil(value / (duration * 10));
-          return newValue > value ? value : newValue;
-        });
+      interval = setInterval(() => {
+        if (isMounted) {
+          setCount(prev => {
+            const newValue = prev + Math.ceil(value / (duration * 10));
+            return newValue > value ? value : newValue;
+          });
+        }
       }, 100);
-      
-      return () => clearInterval(interval);
     }
+    
+    return () => {
+      isMounted = false;
+      if (interval) clearInterval(interval);
+    };
   }, [count, value, duration]);
   
   return (
