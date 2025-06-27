@@ -1,0 +1,71 @@
+{
+  "navigation": {
+    "home": "Home",
+    "cars": "Cars",
+    "about": "About Us",
+    "faq": "FAQ",
+    "contact": "Contact"
+  },
+  "hero": {
+    "title": "Export Quality Vehicles Worldwide",
+    "subtitle": "SS Holdings connects you with premium vehicles for export to any destination. Browse our inventory and find your perfect car today.",
+    "browseCars": "Browse Our Cars",
+    "requestQuote": "Request a Quote"
+  },
+  "featuredCars": {
+    "title": "Featured Vehicles",
+    "subtitle": "Explore our selection of premium vehicles available for export worldwide. Each car is carefully selected to ensure the highest quality and value.",
+    "viewDetails": "View Details",
+    "viewAll": "View All Vehicles"
+  },
+  "whyChooseUs": {
+    "title": "Why Choose SS Holdings",
+    "subtitle": "We provide comprehensive export services with a focus on quality, reliability, and customer satisfaction. Here's what sets us apart.",
+    "qualityAssurance": {
+      "title": "Quality Assurance",
+      "description": "Every vehicle undergoes rigorous inspection to ensure it meets our high quality standards before export."
+    },
+    "globalShipping": {
+      "title": "Global Shipping",
+      "description": "We handle all logistics to deliver your vehicle safely to virtually any destination worldwide."
+    },
+    "expertSupport": {
+      "title": "Expert Support",
+      "description": "Our experienced team provides personalized assistance throughout the entire export process."
+    }
+  },
+  "cta": {
+    "title": "Ready to Export Your Dream Car?",
+    "subtitle": "Contact us today to discuss your specific requirements and discover our current inventory of premium vehicles available for export.",
+    "getQuote": "Get a Free Quote",
+    "browseInventory": "Browse Inventory"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Find answers to common questions about our car export services.",
+    "viewAll": "View All FAQs",
+    "questions": {
+      "exportTime": {
+        "question": "How long does the export process take?",
+        "answer": "The export process timeline varies depending on your location and specific requirements. Typically, it takes 2-4 weeks from purchase to shipping, and an additional 1-8 weeks for shipping, depending on the destination."
+      },
+      "exportCountries": {
+        "question": "Which countries do you export to?",
+        "answer": "We export vehicles to most countries worldwide. Our extensive shipping network allows us to deliver to virtually any destination, including Asia, Africa, Europe, the Middle East, and the Americas."
+      },
+      "customs": {
+        "question": "Do you handle customs clearance?",
+        "answer": "Yes, we handle export customs clearance. Import customs clearance at the destination can also be arranged in many countries through our network of partners, though additional fees may apply."
+      }
+    }
+  },
+  "footer": {
+    "quickLinks": "Quick Links",
+    "carCategories": "Car Categories",
+    "contactUs": "Contact Us",
+    "copyright": "© {{year}} SS Holdings. All rights reserved.",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "shippingPolicy": "Shipping Policy"
+  }
+} 
