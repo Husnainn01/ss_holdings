@@ -394,9 +394,9 @@ export default function CarsPage() {
   ];
   
   return (
-    <div className="bg-light min-h-screen mb-20">
+    <div className="bg-[#F3F4F6] min-h-screen mb-20">
       {/* Top Filter Bar */}
-      <div className="bg-[#F4E7E1] shadow-sm border-b border-gray-200">
+      <div className="bg-[#F3F4F6] shadow-sm border-b border-gray-200">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -449,7 +449,7 @@ export default function CarsPage() {
       
       {/* Filter Panel */}
       {filterPanelOpen && (
-        <div className="bg-[#F4E7E1] border-b border-gray-200 shadow-sm">
+        <div className="bg-[#F3F4F6] border-b border-gray-200 shadow-sm">
           <div className="container mx-auto px-4 py-6">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">

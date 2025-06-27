@@ -134,7 +134,7 @@ export default function CarDetailPage({ params }: CarDetailPageProps) {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-[#F3F4F6] min-h-screen">
       {/* Back Navigation */}
       <div className="container mx-auto px-4 py-4">
         <Link href="/cars" className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors">
