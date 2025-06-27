@@ -109,7 +109,7 @@ export default function FAQSection({
     } else {
       setExpandedItems([]);
     }
-  }, [expandAll, filteredFaqs.length]);
+  }, [expandAll, filteredFaqs]);
   
   // Reset expanded items when search changes
   useEffect(() => {
@@ -254,7 +254,7 @@ export default function FAQSection({
             transition={{ delay: 0.6, duration: 0.5 }}
           >
             <h4 className="font-medium text-gray-800 mb-2">Still have questions?</h4>
-            <p className="text-gray-600 mb-4">We're here to help with any questions about exporting vehicles.</p>
+            <p className="text-gray-600 mb-4">We&apos;re here to help with any questions about exporting vehicles.</p>
             <Button asChild>
               <Link href="/contact">Contact Our Team</Link>
             </Button>
