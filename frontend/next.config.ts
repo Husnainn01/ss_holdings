@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   trailingSlash: true,
+  experimental: {
+    serverComponentsExternalPackages: [],
+  },
 };
 
 export default nextConfig;

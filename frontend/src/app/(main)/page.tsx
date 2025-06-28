@@ -1,9 +1,3 @@
-"use client";
-
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import HeroSection from '@/components/home/HeroSection';
@@ -17,8 +11,6 @@ import BrandsSection from '@/components/home/BrandsSection';
 import SidebarShipping from '@/components/home/SidebarShipping';
 
 export default function HomePage() {
-  const router = useRouter();
-  
   // Hero buttons
   const heroButtons = [
     {
@@ -219,55 +211,51 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F4E7E1]">
-      <Header />
-      <main className="flex-1 w-full bg-gray-100">
-        {/* Hero Section */}
-        <HeroSection buttons={heroButtons} />
+    <main className="bg-gray-100">
+      {/* Hero Section */}
+      <HeroSection buttons={heroButtons} />
+      
+      {/* Main Content with Sidebars */}
+      <div className="w-full flex flex-col md:flex-row">
+        {/* Left Sidebar - Shop By Make */}
+        <div className="md:w-[280px] flex-shrink-0 md:sticky md:top-[73px] p-4">
+          <BrandsSidebar brands={brandsWithCounts} />
+        </div>
         
-        {/* Main Content with Sidebars */}
-        <div className="w-full flex flex-col md:flex-row">
-          {/* Left Sidebar - Shop By Make */}
-          <div className="md:w-[280px] flex-shrink-0 md:sticky md:top-[73px] p-4">
-            <BrandsSidebar brands={brandsWithCounts} />
+        {/* Main Content */}
+        <div className="flex-1 px-4 md:px-6 py-8">
+          {/* Search Form */}
+          <div className="mb-8">
+            <SearchForm />
           </div>
           
-          {/* Main Content */}
-          <div className="flex-1 px-4 md:px-6 py-8">
-            {/* Search Form */}
-            <div className="mb-8">
-              <SearchForm />
-            </div>
-            
-            {/* Recently Added Cars */}
-            <div className="mb-12">
-              <RecentlyAdded cars={recentCars} />
-            </div>
-          </div>
-          
-          {/* Right Sidebar - Shipping Info */}
-          <div className="md:w-[280px] flex-shrink-0 md:sticky md:top-[73px] p-4">
-            <SidebarShipping />
+          {/* Recently Added Cars */}
+          <div className="mb-12">
+            <RecentlyAdded cars={recentCars} />
           </div>
         </div>
         
-        {/* Why Choose Us Section */}
-        <WhyChooseUs features={features} />
-        
-        {/* Brands Section */}
-        <BrandsSection brands={carBrands} />
-        
-        {/* FAQ Section */}
-        <FAQSection faqs={faqs} />
-        
-        {/* CTA Section */}
-        <CTASection 
-          title="Ready to Export Your Dream Car?" 
-          description="Get in touch with our expert team for personalized assistance with your vehicle export needs."
-          buttons={ctaButtons}
-        />
-      </main>
-      <Footer />
-    </div>
+        {/* Right Sidebar - Shipping Info */}
+        <div className="md:w-[280px] flex-shrink-0 md:sticky md:top-[73px] p-4">
+          <SidebarShipping />
+        </div>
+      </div>
+      
+      {/* Why Choose Us Section */}
+      <WhyChooseUs features={features} />
+      
+      {/* Brands Section */}
+      <BrandsSection brands={carBrands} />
+      
+      {/* FAQ Section */}
+      <FAQSection faqs={faqs} />
+      
+      {/* CTA Section */}
+      <CTASection 
+        title="Ready to Export Your Dream Car?" 
+        description="Get in touch with our expert team for personalized assistance with your vehicle export needs."
+        buttons={ctaButtons}
+      />
+    </main>
   );
 }
