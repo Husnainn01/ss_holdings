@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   LayoutDashboard,
   Car,
@@ -12,6 +13,7 @@ import {
   ChevronDown,
   Menu,
   X,
+  ListChecks,
 } from "lucide-react";
 
 interface SidebarItem {
@@ -25,6 +27,19 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  
+  // Auto-expand the current section
+  useEffect(() => {
+    const currentSection = sidebarItems.find(item => 
+      pathname.startsWith(item.href) && item.href !== "/admin/dashboard"
+    );
+    
+    if (currentSection && currentSection.subItems) {
+      setExpandedItems(prev => 
+        prev.includes(currentSection.name) ? prev : [...prev, currentSection.name]
+      );
+    }
+  }, [pathname]);
 
   const sidebarItems: SidebarItem[] = [
     {
@@ -42,9 +57,25 @@ export default function Sidebar() {
       ],
     },
     {
+      name: "Options",
+      href: "/admin/dashboard/options",
+      icon: ListChecks,
+      subItems: [
+        { name: "All Options", href: "/admin/dashboard/options" },
+        { name: "Car Makes", href: "/admin/dashboard/options/makes" },
+        { name: "Body Types", href: "/admin/dashboard/options/bodyTypes" },
+        { name: "Fuel Types", href: "/admin/dashboard/options/fuelTypes" },
+        { name: "Transmission Types", href: "/admin/dashboard/options/transmissionTypes" },
+      ],
+    },
+    {
       name: "Users",
       href: "/admin/dashboard/users",
       icon: Users,
+      subItems: [
+        { name: "All Users", href: "/admin/dashboard/users" },
+        { name: "Add New User", href: "/admin/dashboard/users/new" },
+      ],
     },
     {
       name: "Settings",
@@ -74,15 +105,11 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile toggle */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-        <Link href="/admin/dashboard" className="flex items-center">
-          <span className="text-red-600 text-xl font-bold">SS</span>
-          <span className="ml-1 text-gray-900 font-semibold">Admin</span>
-        </Link>
+      {/* Mobile menu button (only visible on small screens) */}
+      <div className="fixed top-4 left-4 z-30 lg:hidden">
         <button
           onClick={toggleMobileMenu}
-          className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none"
+          className="p-2 rounded-md text-gray-500 bg-white shadow-sm"
         >
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -90,103 +117,118 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-20 transform bg-white w-64 border-r border-gray-200 transition-transform duration-200 ease-in-out lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-20 transform bg-white w-64 shadow-lg transition-transform duration-200 ease-in-out lg:translate-x-0 ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         {/* Logo */}
-        <div className="p-5 border-b border-gray-200">
+        <div className="h-16 flex items-center px-6 border-b border-gray-100">
           <Link href="/admin/dashboard" className="flex items-center">
-            <span className="text-red-600 text-2xl font-bold">SS</span>
-            <span className="ml-2 text-gray-900 font-semibold">Admin Panel</span>
+            <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white h-8 w-8 rounded-md flex items-center justify-center font-bold">
+              SS
+            </div>
+            <span className="ml-3 text-gray-900 font-semibold text-lg">Admin Panel</span>
           </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-1">
-          {sidebarItems.map((item) => (
-            <div key={item.name}>
-              {item.subItems ? (
-                <div className="space-y-1">
-                  <button
-                    onClick={() => toggleExpandItem(item.name)}
+        <div className="mt-6 px-4">
+          <nav className="space-y-2">
+            {sidebarItems.map((item) => (
+              <div key={item.name} className="mb-1">
+                {item.subItems ? (
+                  <div>
+                    <button
+                      onClick={() => toggleExpandItem(item.name)}
+                      className={`${
+                        isItemActive(item.href)
+                          ? "bg-indigo-50 text-indigo-700"
+                          : "text-gray-700 hover:bg-gray-50"
+                      } group flex items-center justify-between w-full px-2 py-2 text-sm font-medium rounded-md transition-colors`}
+                    >
+                      <div className="flex items-center">
+                        <item.icon
+                          className={`${
+                            isItemActive(item.href)
+                              ? "text-indigo-600"
+                              : "text-gray-500 group-hover:text-gray-700"
+                          } h-5 w-5 mr-2`}
+                        />
+                        {item.name}
+                      </div>
+                      <ChevronDown
+                        className={`${
+                          expandedItems.includes(item.name) ? "rotate-180" : ""
+                        } transition-transform duration-200 w-4 h-4 opacity-70`}
+                      />
+                    </button>
+
+                    {expandedItems.includes(item.name) && (
+                      <div className="mt-1 space-y-1 pl-9">
+                        {item.subItems.map((subItem) => (
+                          <Link
+                            key={subItem.name}
+                            href={subItem.href}
+                            className={`${
+                              pathname === subItem.href
+                                ? "bg-indigo-50 text-indigo-700"
+                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                            } block px-2 py-1.5 text-sm font-medium rounded-md transition-colors`}
+                            onClick={() =>
+                              isMobileMenuOpen && setIsMobileMenuOpen(false)
+                            }
+                          >
+                            {subItem.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <Link
+                    href={item.href}
                     className={`${
                       isItemActive(item.href)
-                        ? "bg-gray-100 text-gray-900"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    } group flex items-center w-full px-3 py-2 text-sm font-medium rounded-md`}
+                        ? "bg-indigo-50 text-indigo-700"
+                        : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                    } group flex items-center px-2 py-2 text-sm font-medium rounded-md transition-colors`}
+                    onClick={() => isMobileMenuOpen && setIsMobileMenuOpen(false)}
                   >
                     <item.icon
                       className={`${
                         isItemActive(item.href)
-                          ? "text-gray-500"
-                          : "text-gray-400 group-hover:text-gray-500"
-                      } mr-3 flex-shrink-0 h-5 w-5`}
+                          ? "text-indigo-600"
+                          : "text-gray-500 group-hover:text-gray-700"
+                      } h-5 w-5 mr-2`}
                     />
-                    <span className="flex-1">{item.name}</span>
-                    <ChevronDown
-                      className={`${
-                        expandedItems.includes(item.name) ? "rotate-180" : ""
-                      } transition-transform duration-200 w-4 h-4`}
-                    />
-                  </button>
+                    {item.name}
+                  </Link>
+                )}
+              </div>
+            ))}
+          </nav>
+        </div>
 
-                  {expandedItems.includes(item.name) && (
-                    <div className="pl-10 space-y-1">
-                      {item.subItems.map((subItem) => (
-                        <Link
-                          key={subItem.name}
-                          href={subItem.href}
-                          className={`${
-                            pathname === subItem.href
-                              ? "bg-gray-100 text-gray-900"
-                              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                          } group flex items-center px-3 py-2 text-sm font-medium rounded-md`}
-                          onClick={() =>
-                            isMobileMenuOpen && setIsMobileMenuOpen(false)
-                          }
-                        >
-                          {subItem.name}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <Link
-                  href={item.href}
-                  className={`${
-                    isItemActive(item.href)
-                      ? "bg-gray-100 text-gray-900"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  } group flex items-center px-3 py-2 text-sm font-medium rounded-md`}
-                  onClick={() => isMobileMenuOpen && setIsMobileMenuOpen(false)}
-                >
-                  <item.icon
-                    className={`${
-                      isItemActive(item.href)
-                        ? "text-gray-500"
-                        : "text-gray-400 group-hover:text-gray-500"
-                    } mr-3 flex-shrink-0 h-5 w-5`}
-                  />
-                  {item.name}
-                </Link>
-              )}
+        {/* User profile and logout */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
+          <div className="flex items-center mb-4 px-2">
+            <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium">
+              JD
             </div>
-          ))}
-        </nav>
-
-        {/* Logout */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-900">John Doe</p>
+              <p className="text-xs text-gray-500">Administrator</p>
+            </div>
+          </div>
           <Link
             href="/admin/login"
             onClick={() => {
               // Clear auth token on logout
               localStorage.removeItem("adminAuth");
             }}
-            className="group flex items-center px-3 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900"
+            className="group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-red-50 hover:text-red-700 transition-colors"
           >
-            <LogOut className="mr-3 flex-shrink-0 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+            <LogOut className="h-5 w-5 mr-2 text-gray-500 group-hover:text-red-600" />
             Logout
           </Link>
         </div>

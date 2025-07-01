@@ -5,7 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Button } from "@/components/ui/button";
-import { PhoneCall, Mail, ArrowRight, Car, CheckCircle } from 'lucide-react';
+import { PhoneCall, Mail, ArrowRight, Car, CheckCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { vehicleAPI } from '@/services/api';
 
 interface CTAButton {
   text: string;
@@ -19,6 +20,19 @@ interface CTASectionProps {
   buttons: CTAButton[];
   bgColor?: string;
   textColor?: string;
+}
+
+interface Vehicle {
+  _id: string;
+  title: string;
+  make: string;
+  model: string;
+  year: number;
+  price: number;
+  images: {
+    url: string;
+    isMain: boolean;
+  }[];
 }
 
 const CTAFeatureItem = ({ icon, text }: { icon: React.ReactNode, text: string }) => (
@@ -46,6 +60,31 @@ export default function CTASection({
   const [scrollY, setScrollY] = useState(0);
   const isMounted = useRef(true);
   
+  // State for newest vehicles
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  
+  // Fetch newest vehicles
+  useEffect(() => {
+    const fetchNewestVehicles = async () => {
+      try {
+        setLoading(true);
+        const response = await vehicleAPI.getRecentVehicles(10);
+        setVehicles(response.data || []);
+      } catch (err) {
+        console.error("Error fetching newest vehicles:", err);
+        setError("Failed to load newest vehicles");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchNewestVehicles();
+  }, []);
+  
+  // Scroll effect
   useEffect(() => {
     const handleScroll = () => {
       if (isMounted.current) {
@@ -60,6 +99,43 @@ export default function CTASection({
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+  
+  // Carousel navigation
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === vehicles.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+  
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === 0 ? vehicles.length - 1 : prevIndex - 1
+    );
+  };
+  
+  // Auto-advance carousel
+  useEffect(() => {
+    if (vehicles.length > 1) {
+      const interval = setInterval(() => {
+        nextSlide();
+      }, 5000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [vehicles.length, currentIndex]);
+  
+  // Get current vehicle
+  const currentVehicle = vehicles[currentIndex];
+  
+  // Get vehicle image URL
+  const getVehicleImage = (vehicle: Vehicle) => {
+    if (!vehicle || !vehicle.images || vehicle.images.length === 0) {
+      return `https://placehold.co/800x600/png?text=${encodeURIComponent('No Image Available')}`;
+    }
+    
+    const mainImage = vehicle.images.find(img => img.isMain);
+    return mainImage?.url || vehicle.images[0].url;
+  };
 
   return (
     <section className={`py-24 ${bgColor} ${textColor} relative overflow-hidden border-0 mb-0`}>
@@ -196,7 +272,7 @@ export default function CTASection({
             </motion.div>
           </div>
           
-          {/* Right Side: Image or Video */}
+          {/* Right Side: Newest Vehicles Carousel */}
           <motion.div 
             className="hidden md:block"
             initial={{ opacity: 0, x: 50 }}
@@ -206,23 +282,96 @@ export default function CTASection({
             <div className="relative">
               <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-2xl blur-lg"></div>
               <div className="relative bg-gray-800 rounded-xl overflow-hidden aspect-[4/3] shadow-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/60"></div>
-                <Image
-                  src="https://placehold.co/800x600/png?text=Premium+Export+Cars"
-                  alt="Premium Export Cars"
-                  className="object-cover"
-                  width={800}
-                  height={600}
-                  style={{ transform: `translateY(${scrollY * 0.05}px)` }}
-                />
-                <div className="absolute bottom-6 left-6 right-6">
-                  <div className="bg-black/70 backdrop-blur-sm rounded-lg p-4">
-                    <div className="flex items-center text-xs font-medium text-white">
-                      <Car className="h-4 w-4 mr-1 text-red-500" />
-                      <span>Premium vehicles ready for export</span>
-                    </div>
+                {loading ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="h-10 w-10 animate-spin text-white/50" />
                   </div>
-                </div>
+                ) : error ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-red-400 text-center">Failed to load newest vehicles</p>
+                  </div>
+                ) : vehicles.length === 0 ? (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <p className="text-white/70 text-center">No vehicles available</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/60"></div>
+                    <Image
+                      src={getVehicleImage(currentVehicle)}
+                      alt={currentVehicle.title || `${currentVehicle.year} ${currentVehicle.make} ${currentVehicle.model}`}
+                      className="object-cover transition-opacity duration-500"
+                      width={800}
+                      height={600}
+                      style={{ transform: `translateY(${scrollY * 0.05}px)` }}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.src = `https://placehold.co/800x600/png?text=${encodeURIComponent(currentVehicle.make + ' ' + currentVehicle.model)}`;
+                      }}
+                    />
+                    
+                    {/* Carousel Navigation */}
+                    {vehicles.length > 1 && (
+                      <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 flex justify-between px-4">
+                        <button 
+                          onClick={prevSlide} 
+                          className="bg-black/30 hover:bg-black/50 text-white rounded-full p-2 backdrop-blur-sm transition-colors"
+                          aria-label="Previous vehicle"
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                        </button>
+                        <button 
+                          onClick={nextSlide} 
+                          className="bg-black/30 hover:bg-black/50 text-white rounded-full p-2 backdrop-blur-sm transition-colors"
+                          aria-label="Next vehicle"
+                        >
+                          <ChevronRight className="h-5 w-5" />
+                        </button>
+                      </div>
+                    )}
+                    
+                    {/* Vehicle Info */}
+                    <div className="absolute bottom-6 left-6 right-6">
+                      <div className="bg-black/70 backdrop-blur-sm rounded-lg p-4">
+                        <Link href={`/cars/${currentVehicle._id}`} className="block group">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h3 className="text-white font-medium">
+                                {currentVehicle.year} {currentVehicle.make} {currentVehicle.model}
+                              </h3>
+                              <p className="text-white/70 text-sm">
+                                ${currentVehicle.price?.toLocaleString() || 'Price on request'}
+                              </p>
+                            </div>
+                            <ArrowRight className="h-4 w-4 text-white/70 group-hover:text-white transition-transform duration-300 group-hover:translate-x-1" />
+                          </div>
+                        </Link>
+                        <div className="flex items-center text-xs font-medium text-white mt-2 pt-2 border-t border-white/10">
+                          <Car className="h-4 w-4 mr-1 text-red-500" />
+                          <span>Newest vehicles ready for export</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Carousel Indicators */}
+                    {vehicles.length > 1 && (
+                      <div className="absolute bottom-0 left-0 right-0 flex justify-center pb-1">
+                        <div className="flex gap-1.5 px-2 py-1">
+                          {vehicles.map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setCurrentIndex(index)}
+                              className={`h-1.5 rounded-full transition-all ${
+                                index === currentIndex ? 'bg-white w-4' : 'bg-white/40 w-1.5'
+                              }`}
+                              aria-label={`Go to vehicle ${index + 1}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </motion.div>

@@ -1,0 +1,135 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import mongoose from 'mongoose';
+import path from 'path';
+import config from './config/config';
+import { initializeDatabase } from './utils/initDB';
+
+// Import routes
+import vehicleRoutes from './routes/vehicle.routes';
+import authRoutes from './routes/auth.routes';
+import uploadRoutes from './routes/upload.routes';
+import adminRoutes from './routes/admin.routes';
+import roleRoutes from './routes/role.routes';
+import optionsRoutes from './routes/options.routes';
+
+// Initialize Express app
+const app = express();
+const PORT = config.port;
+
+// Middleware
+app.use(helmet()); // Security headers
+
+// Configure CORS to accept requests from both port 3000 and 3001
+app.use(cors({
+  origin: function(origin, callback) {
+    const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+})); // Enable CORS
+
+app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(morgan('dev')); // Logging
+
+// No longer serving static files locally as we're using Cloudflare hosting
+// However, we'll keep this as a fallback for local file storage
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
+// Use the correct MongoDB URI
+const mongoUri = 'mongodb+srv://ssholdings:D3MIteSgAONU5vk0@ssholdings.9aizwu5.mongodb.net/ssholdings';
+
+// Connect to MongoDB
+const connectDB = async () => {
+  try {
+    console.log('Connecting to MongoDB...');
+    console.log(`Using database: ${mongoUri}`);
+    
+    await mongoose.connect(mongoUri, {
+      // MongoDB connection options
+      retryWrites: true,
+      w: 'majority',
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+    });
+    console.log('MongoDB connected successfully');
+    
+    // Initialize database with roles if needed
+    await initializeDatabase();
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    console.log('MongoDB URI:', mongoUri);
+    console.log('Retrying connection in 5 seconds...');
+    
+    // Wait 5 seconds and try again
+    setTimeout(connectDB, 5000);
+  }
+};
+
+// Initial database connection
+connectDB();
+
+// MongoDB connection events
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected, attempting to reconnect...');
+  connectDB();
+});
+
+mongoose.connection.on('connected', () => {
+  console.log('MongoDB connected');
+});
+
+// Routes
+app.use('/api/vehicles', vehicleRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/uploads', uploadRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/roles', roleRoutes);
+app.use('/api/options', optionsRoutes);
+
+// Health check route
+app.get('/health', (req, res) => {
+  const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+  res.status(200).json({ 
+    status: 'ok', 
+    message: 'Server is running',
+    database: dbStatus
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ message: 'Not found' });
+});
+
+// Error handler
+app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    message: 'Internal server error',
+    error: config.nodeEnv === 'development' ? err.message : undefined
+  });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT} in ${config.nodeEnv} mode`);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err: Error) => {
+  console.error('Unhandled Promise Rejection:', err);
+  // Don't exit the process, just log the error
+  // process.exit(1);
+}); 

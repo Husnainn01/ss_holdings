@@ -9,8 +9,78 @@ import FAQSection from '@/components/home/FAQSection';
 import CTASection from '@/components/home/CTASection';
 import BrandsSection from '@/components/home/BrandsSection';
 import SidebarShipping from '@/components/home/SidebarShipping';
+import FeaturedCars from '@/components/home/FeaturedCars';
 
-export default function HomePage() {
+// This is a server component, so we can fetch data directly
+async function getVehicles() {
+  try {
+    // Fetch recently added vehicles
+    const recentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/vehicles?limit=8&sort=-createdAt`, { 
+      cache: 'no-store' // Don't cache this request
+    });
+    
+    // Fetch featured vehicles
+    const featuredResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/vehicles?isFeatured=true&limit=4`, { 
+      cache: 'no-store' // Don't cache this request
+    });
+    
+    if (!recentResponse.ok || !featuredResponse.ok) {
+      console.error('Error fetching vehicles:', 
+        recentResponse.ok ? '' : `Recent: ${recentResponse.status}`,
+        featuredResponse.ok ? '' : `Featured: ${featuredResponse.status}`
+      );
+      // If there's an error, return empty arrays
+      return { recentCars: [], featuredCars: [] };
+    }
+    
+    const recentData = await recentResponse.json();
+    const featuredData = await featuredResponse.json();
+    
+    console.log('Raw recent data:', JSON.stringify(recentData));
+    console.log('Raw featured data:', JSON.stringify(featuredData));
+    
+    // Map the API data to our component format
+    const mapVehicle = (vehicle: any) => ({
+      id: vehicle._id,
+      title: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+      make: vehicle.make,
+      model: vehicle.model,
+      year: vehicle.year,
+      price: vehicle.price,
+      stockNumber: vehicle.stockNumber || '',
+      status: vehicle.status || 'in-stock',
+      imageUrl: vehicle.images && vehicle.images.length > 0 ? 
+        vehicle.images.find((img: any) => img.isMain)?.url || vehicle.images[0].url : 
+        `https://placehold.co/600x400/png?text=${vehicle.make}+${vehicle.model}`,
+      transmission: vehicle.vehicleTransmission || 'N/A',
+      fuel: vehicle.fuelType || 'N/A',
+      mileage: vehicle.mileage || 0,
+      mileageUnit: vehicle.mileageUnit || 'km',
+      location: vehicle.location || 'N/A',
+      bodyType: vehicle.bodyType || 'N/A',
+      featured: vehicle.isFeatured || false
+    });
+    
+    // Make sure we're extracting the vehicles array correctly
+    const recentVehicles = recentData.vehicles || [];
+    const featuredVehicles = featuredData.vehicles || [];
+    
+    console.log('Recent vehicles count:', recentVehicles.length);
+    console.log('Featured vehicles count:', featuredVehicles.length);
+    
+    const recentCars = recentVehicles.map(mapVehicle);
+    const featuredCars = featuredVehicles.map(mapVehicle);
+    
+    console.log('Fetched vehicles:', { recentCount: recentCars.length, featuredCount: featuredCars.length });
+    
+    return { recentCars, featuredCars };
+  } catch (error) {
+    console.error('Error fetching vehicles:', error);
+    return { recentCars: [], featuredCars: [] };
+  }
+}
+
+export default async function HomePage() {
   // Hero buttons
   const heroButtons = [
     {
@@ -25,90 +95,8 @@ export default function HomePage() {
     }
   ];
 
-  // Mock data for recently added cars
-  const recentCars = [
-    {
-      id: '1',
-      title: '2023 Toyota Camry XSE',
-      make: 'Toyota',
-      model: 'Camry',
-      year: 2023,
-      price: 32500,
-      stockNumber: 'T12345',
-      status: 'in-stock' as const,
-      imageUrl: 'https://placehold.co/600x400/png?text=Toyota+Camry',
-      transmission: 'Automatic',
-      fuel: 'Petrol'
-    },
-    {
-      id: '2',
-      title: '2022 BMW X5 xDrive40i',
-      make: 'BMW',
-      model: 'X5',
-      year: 2022,
-      price: 65999,
-      stockNumber: 'B54321',
-      status: 'in-stock' as const,
-      imageUrl: 'https://placehold.co/600x400/png?text=BMW+X5',
-      transmission: 'Automatic',
-      fuel: 'Petrol'
-    },
-    {
-      id: '3',
-      title: '2021 Mercedes-Benz C300',
-      make: 'Mercedes-Benz',
-      model: 'C-Class',
-      year: 2021,
-      price: 45750,
-      stockNumber: 'M98765',
-      status: 'in-stock' as const,
-      imageUrl: 'https://placehold.co/600x400/png?text=Mercedes+C300',
-      transmission: 'Automatic',
-      fuel: 'Petrol'
-    },
-    {
-      id: '4',
-      title: 'Subaru Sambar',
-      make: 'Subaru',
-      model: 'Sambar',
-      year: 1997,
-      price: 7500,
-      stockNumber: 'JDM-3484',
-      status: 'in-stock' as const,
-      imageUrl: 'https://placehold.co/600x400/png?text=Subaru+Sambar',
-      transmission: 'Manual',
-      fuel: 'Petrol',
-      mileage: 116885
-    },
-    {
-      id: '5',
-      title: 'Honda Acty SDX',
-      make: 'Honda',
-      model: 'Acty',
-      year: 1998,
-      price: 7000,
-      stockNumber: 'JDM-0925',
-      status: 'in-stock' as const,
-      imageUrl: 'https://placehold.co/600x400/png?text=Honda+Acty',
-      transmission: 'Manual',
-      fuel: 'Petrol',
-      mileage: 113832
-    },
-    {
-      id: '6',
-      title: 'Daihatsu Hijet',
-      make: 'Daihatsu',
-      model: 'Hijet',
-      year: 1997,
-      price: 8000,
-      stockNumber: 'JDM-8724',
-      status: 'in-stock' as const,
-      imageUrl: 'https://placehold.co/600x400/png?text=Daihatsu+Hijet',
-      transmission: 'Manual',
-      fuel: 'Petrol',
-      mileage: 107170
-    }
-  ];
+  // Fetch real vehicle data
+  const { recentCars, featuredCars } = await getVehicles();
    
   // Features for "Why Choose Us" section
   const features = [
@@ -171,45 +159,6 @@ export default function HomePage() {
     }
   ];
   
-  // Mock data for car brands
-  const carBrands = [
-    { name: 'Toyota', logo: 'https://placehold.co/200x100/png?text=Toyota' },
-    { name: 'BMW', logo: 'https://placehold.co/200x100/png?text=BMW' },
-    { name: 'Mercedes-Benz', logo: 'https://placehold.co/200x100/png?text=Mercedes' },
-    { name: 'Audi', logo: 'https://placehold.co/200x100/png?text=Audi' },
-    { name: 'Honda', logo: 'https://placehold.co/200x100/png?text=Honda' },
-    { name: 'Ford', logo: 'https://placehold.co/200x100/png?text=Ford' },
-  ];
-
-  // Brands with counts for sidebar
-  const brandsWithCounts = [
-    { name: 'TOYOTA', logo: 'https://placehold.co/32x32/png?text=TOYOTA', count: 76114 },
-    { name: 'NISSAN', logo: 'https://placehold.co/32x32/png?text=NISSAN', count: 37392 },
-    { name: 'HONDA', logo: 'https://placehold.co/32x32/png?text=HONDA', count: 31483 },
-    { name: 'MAZDA', logo: 'https://placehold.co/32x32/png?text=MAZDA', count: 13107 },
-    { name: 'MITSUBISHI', logo: 'https://placehold.co/32x32/png?text=MITSUBISHI', count: 11651 },
-    { name: 'SUBARU', logo: 'https://placehold.co/32x32/png?text=SUBARU', count: 9789 },
-    { name: 'SUZUKI', logo: 'https://placehold.co/32x32/png?text=SUZUKI', count: 38573 },
-    { name: 'ISUZU', logo: 'https://placehold.co/32x32/png?text=ISUZU', count: 4660 },
-    { name: 'DAIHATSU', logo: 'https://placehold.co/32x32/png?text=DAIHATSU', count: 31257 },
-    { name: 'HINO', logo: 'https://placehold.co/32x32/png?text=HINO', count: 3095 },
-    { name: 'LEXUS', logo: 'https://placehold.co/32x32/png?text=LEXUS', count: 6930 },
-    { name: 'MERCEDES-BENZ', logo: 'https://placehold.co/32x32/png?text=MB', count: 21358 },
-    { name: 'BMW', logo: 'https://placehold.co/32x32/png?text=BMW', count: 21996 },
-    { name: 'VOLKSWAGEN', logo: 'https://placehold.co/32x32/png?text=VW', count: 5221 },
-    { name: 'AUDI', logo: 'https://placehold.co/32x32/png?text=AUDI', count: 5994 },
-    { name: 'PEUGEOT', logo: 'https://placehold.co/32x32/png?text=PEUGEOT', count: 1649 },
-    { name: 'FORD', logo: 'https://placehold.co/32x32/png?text=FORD', count: 2992 },
-    { name: 'VOLVO', logo: 'https://placehold.co/32x32/png?text=VOLVO', count: 3233 },
-    { name: 'LAND ROVER', logo: 'https://placehold.co/32x32/png?text=LR', count: 9129 },
-    { name: 'JAGUAR', logo: 'https://placehold.co/32x32/png?text=JAGUAR', count: 1102 },
-    { name: 'JEEP', logo: 'https://placehold.co/32x32/png?text=JEEP', count: 3653 },
-    { name: 'CHEVROLET', logo: 'https://placehold.co/32x32/png?text=CHEVY', count: 9788 },
-    { name: 'HYUNDAI', logo: 'https://placehold.co/32x32/png?text=HYUNDAI', count: 46190 },
-    { name: 'KIA', logo: 'https://placehold.co/32x32/png?text=KIA', count: 42211 },
-    { name: 'SSANGYONG', logo: 'https://placehold.co/32x32/png?text=SSANGYONG', count: 7382 }
-  ];
-
   return (
     <main className="bg-gray-100">
       {/* Hero Section */}
@@ -219,7 +168,7 @@ export default function HomePage() {
       <div className="w-full flex flex-col md:flex-row">
         {/* Left Sidebar - Shop By Make */}
         <div className="md:w-[280px] flex-shrink-0 md:sticky md:top-[73px] p-4">
-          <BrandsSidebar brands={brandsWithCounts} />
+          <BrandsSidebar />
         </div>
         
         {/* Main Content */}
@@ -241,11 +190,18 @@ export default function HomePage() {
         </div>
       </div>
       
+      {/* Featured Cars Section */}
+      <FeaturedCars 
+        cars={featuredCars} 
+        title="Featured Vehicles" 
+        subtitle="Premium selection of our most popular export vehicles"
+      />
+      
       {/* Why Choose Us Section */}
       <WhyChooseUs features={features} />
       
       {/* Brands Section */}
-      <BrandsSection brands={carBrands} />
+      <BrandsSection />
       
       {/* FAQ Section */}
       <FAQSection faqs={faqs} />
@@ -253,7 +209,7 @@ export default function HomePage() {
       {/* CTA Section */}
       <CTASection 
         title="Ready to Export Your Dream Car?" 
-        description="Get in touch with our expert team for personalized assistance with your vehicle export needs."
+        description="Contact us today to get started with your vehicle export journey."
         buttons={ctaButtons}
       />
     </main>

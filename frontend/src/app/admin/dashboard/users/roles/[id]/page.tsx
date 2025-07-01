@@ -1,0 +1,458 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { 
+  ArrowLeft, 
+  Save, 
+  User, 
+  Check, 
+  X,
+  Shield,
+  AlertTriangle,
+  Loader2
+} from "lucide-react";
+import { userAPI, roleAPI } from "@/services/api";
+
+// Define permission types based on our backend
+interface Permission {
+  resource: string;
+  actions: string[];
+}
+
+interface Role {
+  _id: string;
+  name: string;
+  description: string;
+  permissions: Permission[];
+}
+
+interface UserData {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  permissions: Permission[];
+}
+
+// All available resources and actions
+const ALL_RESOURCES = [
+  { 
+    name: "users", 
+    label: "Users", 
+    actions: ["view", "create", "edit", "delete"]
+  },
+  { 
+    name: "vehicles", 
+    label: "Vehicles", 
+    actions: ["view", "create", "edit", "delete"]
+  },
+  { 
+    name: "settings", 
+    label: "Settings", 
+    actions: ["view", "edit"]
+  }
+];
+
+export default function UserRolesPage() {
+  const params = useParams();
+  const router = useRouter();
+  const userId = params.id as string;
+  
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [selectedRole, setSelectedRole] = useState<string>("");
+  const [customPermissions, setCustomPermissions] = useState<Permission[]>([]);
+  const [hasCustomPermissions, setHasCustomPermissions] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  // Fetch user and roles data
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch roles
+        const rolesResponse = await roleAPI.getRoles();
+        setRoles(rolesResponse.data);
+        
+        // Fetch user permissions
+        const userResponse = await userAPI.getUserPermissions(userId);
+        const userData = userResponse.data;
+        
+        if (!userData) {
+          setErrorMessage("User not found");
+          setLoading(false);
+          return;
+        }
+        
+        setUser(userData);
+        setSelectedRole(userData.role);
+        setCustomPermissions(userData.permissions);
+        
+            // Check if user has custom permissions that don't match their role
+    const rolePermissions = rolesResponse.data.find((r: Role) => r.name.toLowerCase() === userData.role.toLowerCase())?.permissions || [];
+    setHasCustomPermissions(!arePermissionsEqual(userData.permissions, rolePermissions));
+        
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setErrorMessage("Failed to load user data");
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [userId]);
+
+  // Helper function to compare permissions
+  const arePermissionsEqual = (perms1: Permission[], perms2: Permission[]): boolean => {
+    if (perms1.length !== perms2.length) return false;
+    
+    // Create a map of resource to actions for easier comparison
+    const permsMap1 = perms1.reduce((acc, perm) => {
+      acc[perm.resource] = new Set(perm.actions);
+      return acc;
+    }, {} as Record<string, Set<string>>);
+    
+    // Check if all permissions in perms2 match perms1
+    for (const perm of perms2) {
+      const actions1 = permsMap1[perm.resource];
+      if (!actions1) return false;
+      
+      if (actions1.size !== perm.actions.length) return false;
+      
+      for (const action of perm.actions) {
+        if (!actions1.has(action)) return false;
+      }
+    }
+    
+    return true;
+  };
+
+  // Handle role change
+  const handleRoleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newRole = e.target.value;
+    setSelectedRole(newRole);
+    
+    // Update permissions based on the selected role
+    if (!hasCustomPermissions) {
+      const rolePermissions = roles.find(r => r.name.toLowerCase() === newRole.toLowerCase())?.permissions || [];
+      setCustomPermissions([...rolePermissions]);
+    }
+  };
+
+  // Toggle custom permissions mode
+  const toggleCustomPermissions = () => {
+    const newState = !hasCustomPermissions;
+    setHasCustomPermissions(newState);
+    
+    if (!newState) {
+      // Reset to role-based permissions
+      const rolePermissions = roles.find(r => r.name.toLowerCase() === selectedRole.toLowerCase())?.permissions || [];
+      setCustomPermissions([...rolePermissions]);
+    }
+  };
+
+  // Check if a permission is granted
+  const hasPermission = (resource: string, action: string): boolean => {
+    const resourcePermission = customPermissions.find(p => p.resource === resource);
+    return resourcePermission ? resourcePermission.actions.includes(action) : false;
+  };
+
+  // Toggle a specific permission
+  const togglePermission = (resource: string, action: string) => {
+    setCustomPermissions(prevPermissions => {
+      const newPermissions = [...prevPermissions];
+      const resourceIndex = newPermissions.findIndex(p => p.resource === resource);
+      
+      if (resourceIndex === -1) {
+        // Resource doesn't exist yet, add it
+        newPermissions.push({
+          resource,
+          actions: [action]
+        });
+      } else {
+        // Resource exists, toggle the action
+        const actions = newPermissions[resourceIndex].actions;
+        if (actions.includes(action)) {
+          // Remove the action
+          newPermissions[resourceIndex] = {
+            ...newPermissions[resourceIndex],
+            actions: actions.filter(a => a !== action)
+          };
+          
+          // If no actions left, remove the resource
+          if (newPermissions[resourceIndex].actions.length === 0) {
+            newPermissions.splice(resourceIndex, 1);
+          }
+        } else {
+          // Add the action
+          newPermissions[resourceIndex] = {
+            ...newPermissions[resourceIndex],
+            actions: [...actions, action]
+          };
+        }
+      }
+      
+      return newPermissions;
+    });
+  };
+
+  // Save changes
+  const saveChanges = async () => {
+    try {
+      setSaving(true);
+      setSuccessMessage("");
+      setErrorMessage("");
+      
+      await userAPI.updateUserPermissions(userId, {
+        role: selectedRole,
+        hasCustomPermissions,
+        permissions: hasCustomPermissions ? customPermissions : undefined
+      });
+      
+      setSuccessMessage("User permissions updated successfully");
+      setSaving(false);
+    } catch (error) {
+      console.error("Error saving permissions:", error);
+      setErrorMessage("Failed to update user permissions");
+      setSaving(false);
+    }
+  };
+
+  // Action label formatting
+  const formatActionLabel = (action: string): string => {
+    return action.charAt(0).toUpperCase() + action.slice(1);
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6 flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-indigo-600" />
+          <p className="mt-4 text-gray-600">Loading user data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+          <div className="flex">
+            <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
+            <div>
+              <h3 className="text-sm font-medium text-red-800">User not found</h3>
+              <p className="text-sm text-red-700 mt-1">
+                The requested user could not be found. Please check the user ID and try again.
+              </p>
+              <div className="mt-3">
+                <Link
+                  href="/admin/dashboard/users"
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  <ArrowLeft className="mr-1 h-4 w-4" />
+                  Back to Users
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">User Permissions</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Manage roles and permissions for this user
+          </p>
+        </div>
+        <Link
+          href="/admin/dashboard/users"
+          className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Users
+        </Link>
+      </div>
+
+      {successMessage && (
+        <div className="bg-green-50 border border-green-200 rounded-md p-4 mb-6">
+          <div className="flex">
+            <Check className="h-5 w-5 text-green-400 mr-2" />
+            <p className="text-sm text-green-700">{successMessage}</p>
+          </div>
+        </div>
+      )}
+
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+          <div className="flex">
+            <X className="h-5 w-5 text-red-400 mr-2" />
+            <p className="text-sm text-red-700">{errorMessage}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex items-center">
+            <div className="flex-shrink-0 h-12 w-12 rounded-full bg-indigo-100 flex items-center justify-center">
+              <User className="h-6 w-6 text-indigo-600" />
+            </div>
+            <div className="ml-4">
+              <h2 className="text-lg font-medium text-gray-900">{user.name}</h2>
+              <p className="text-sm text-gray-500">{user.email}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 border-b border-gray-200">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Role Assignment</h3>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                User Role
+              </label>
+              <select
+                id="role"
+                name="role"
+                className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                value={selectedRole}
+                onChange={handleRoleChange}
+              >
+                {roles.map((role) => (
+                  <option key={role._id} value={role.name.toLowerCase()}>
+                    {role.name}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-2 text-sm text-gray-500">
+                {roles.find(r => r.name.toLowerCase() === selectedRole.toLowerCase())?.description}
+              </p>
+            </div>
+            
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Permission Mode
+                </label>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <button
+                  type="button"
+                  onClick={toggleCustomPermissions}
+                  className={`flex-1 py-2 px-4 border rounded-md text-sm font-medium ${
+                    !hasCustomPermissions
+                      ? "bg-indigo-50 border-indigo-500 text-indigo-700"
+                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Role-based
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleCustomPermissions}
+                  className={`flex-1 py-2 px-4 border rounded-md text-sm font-medium ${
+                    hasCustomPermissions
+                      ? "bg-indigo-50 border-indigo-500 text-indigo-700"
+                      : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Custom
+                </button>
+              </div>
+              
+              <p className="mt-2 text-sm text-gray-500">
+                {hasCustomPermissions
+                  ? "Custom permissions override the default role permissions"
+                  : "User inherits all permissions from their assigned role"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-medium text-gray-900">
+              {hasCustomPermissions ? "Custom Permissions" : "Role Permissions"}
+            </h3>
+            {hasCustomPermissions && (
+              <div className="flex items-center">
+                <Shield className="h-5 w-5 text-amber-500 mr-1" />
+                <span className="text-sm text-amber-500 font-medium">Custom permissions enabled</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="space-y-6">
+            {ALL_RESOURCES.map((resource) => (
+              <div key={resource.name} className="border border-gray-200 rounded-md overflow-hidden">
+                <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                  <h4 className="text-sm font-medium text-gray-900">{resource.label}</h4>
+                </div>
+                <div className="p-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {resource.actions.map((action) => (
+                      <div key={`${resource.name}-${action}`} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id={`${resource.name}-${action}`}
+                          checked={hasPermission(resource.name, action)}
+                          onChange={() => hasCustomPermissions && togglePermission(resource.name, action)}
+                          disabled={!hasCustomPermissions}
+                          className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                        />
+                        <label
+                          htmlFor={`${resource.name}-${action}`}
+                          className={`ml-2 block text-sm ${
+                            hasCustomPermissions ? "text-gray-900" : "text-gray-500"
+                          }`}
+                        >
+                          {formatActionLabel(action)}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="px-6 py-4 bg-gray-50 flex justify-end">
+          <button
+            type="button"
+            onClick={saveChanges}
+            disabled={saving}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+} 

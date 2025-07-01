@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -20,84 +20,9 @@ import {
   Check,
   ArrowRight
 } from 'lucide-react';
-
-// This would come from your database in a real app
-const getCar = (id: string) => {
-  // Mock data for a car
-  const car = {
-    id,
-    title: '2023 Toyota Camry XSE',
-    stockNumber: 'T12345',
-    price: 32500,
-    year: 2023,
-    month: 5, // May
-    make: 'Toyota',
-    model: 'Camry',
-    mileage: 5000,
-    mileageUnit: 'km',
-    vin: 'JT2BF22K1W0123456',
-    color: 'Pearl White',
-    interiorColor: 'Black',
-    bodyType: 'Sedan',
-    transmission: 'Automatic',
-    fuel: 'Petrol',
-    driveType: 'FWD',
-    engineType: '2.5L Inline-4',
-    engineCapacity: 2.5,
-    seatingCapacity: 5,
-    doors: 4,
-    condition: 'Used',
-    location: 'Tokyo, Japan',
-    status: 'in-stock',
-    description: 'This 2023 Toyota Camry XSE is in excellent condition with low mileage. It features a powerful yet fuel-efficient 2.5L engine, automatic transmission, and front-wheel drive. The exterior is a beautiful Pearl White color with a sleek Black interior. This model comes with a variety of modern features and is ready for export worldwide.',
-    features: [
-      'Leather Seats',
-      'Navigation System',
-      'Backup Camera',
-      'Bluetooth',
-      'Keyless Entry',
-      'Sunroof',
-      'Alloy Wheels',
-      'Heated Seats',
-      'Apple CarPlay',
-      'Android Auto',
-      'Lane Departure Warning',
-      'Automatic Emergency Braking'
-    ],
-    images: [
-      'https://placehold.co/800x600/png?text=Toyota+Camry+1',
-      'https://placehold.co/800x600/png?text=Toyota+Camry+2',
-      'https://placehold.co/800x600/png?text=Toyota+Camry+3',
-      'https://placehold.co/800x600/png?text=Toyota+Camry+4',
-      'https://placehold.co/800x600/png?text=Toyota+Camry+5'
-    ],
-    similarCars: [
-      {
-        id: '2',
-        title: '2022 Honda Accord EX',
-        price: 29800,
-        mileage: 8500,
-        image: 'https://placehold.co/400x300/png?text=Honda+Accord'
-      },
-      {
-        id: '3',
-        title: '2023 Nissan Altima SL',
-        price: 31200,
-        mileage: 3200,
-        image: 'https://placehold.co/400x300/png?text=Nissan+Altima'
-      },
-      {
-        id: '4',
-        title: '2022 Mazda 6 Grand Touring',
-        price: 30500,
-        mileage: 7800,
-        image: 'https://placehold.co/400x300/png?text=Mazda+6'
-      }
-    ]
-  };
-
-  return car;
-};
+import { vehicleAPI } from '@/services/api';
+import { IVehicle, IVehicleImage } from '@/types/vehicle';
+import { updateImageUrl } from '@/lib/utils';
 
 interface CarDetailPageProps {
   params: {
@@ -105,13 +30,163 @@ interface CarDetailPageProps {
   }
 }
 
+// Check if a string is a valid MongoDB ObjectId
+function isValidObjectId(id: string): boolean {
+  return /^[0-9a-fA-F]{24}$/.test(id);
+}
+
 export default function CarDetailPage({ params }: CarDetailPageProps) {
-  const car = getCar(params.id);
+  // Use React.use() to unwrap params properly typed
+  const resolvedParams = React.use(params as any) as { id: string };
+  const { id } = resolvedParams;
+  
+  // State hooks
+  const [car, setCar] = useState<IVehicle | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('specifications');
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [similarCars, setSimilarCars] = useState<IVehicle[]>([]);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
+    country: '',
+    message: ''
+  });
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  
+  // Ref hooks
+  const contactSectionRef = useRef<HTMLDivElement>(null);
+  
+  // Effect to fetch car data
+  useEffect(() => {
+    const fetchCarData = async () => {
+      try {
+        // Check if the ID is a valid MongoDB ObjectId before making the request
+        if (!isValidObjectId(id)) {
+          console.error('Invalid MongoDB ObjectId:', id);
+          setError('Invalid vehicle ID');
+          setLoading(false);
+          return;
+        }
+        
+        setLoading(true);
+        const response = await vehicleAPI.getVehicle(id);
+        setCar(response.data);
+        
+        // Fetch similar cars (same make or body type)
+        try {
+          const similarResponse = await vehicleAPI.getVehicles({
+            limit: 3,
+            make: response.data.make,
+            exclude: id
+          });
+          setSimilarCars(similarResponse.data.vehicles || []);
+        } catch (err) {
+          console.error('Error fetching similar cars:', err);
+          setSimilarCars([]);
+        }
+      } catch (err) {
+        console.error('Error fetching car details:', err);
+        setError('Failed to load car details');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!car) {
-    notFound();
+    fetchCarData();
+  }, [id]);
+  
+  // Effect to set default message when car data changes
+  useEffect(() => {
+    if (car) {
+      setFormData(prev => ({
+        ...prev,
+        message: `I'm interested in this ${car.year} ${car.make} ${car.model}. Please contact me with more information.`
+      }));
+    }
+  }, [car]);
+
+  // Function to scroll to inquiry form
+  const scrollToInquiryForm = () => {
+    setActiveTab('inquire');
+    setTimeout(() => {
+      contactSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
+  };
+  
+  // Form change handler
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  // Form submit handler
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!formData.fullName || !formData.email || !formData.message) {
+      setFormError('Please fill in all required fields');
+      return;
+    }
+    
+    setFormSubmitting(true);
+    setFormError(null);
+    
+    try {
+      // Here you would typically send the form data to your backend API
+      // For now, we'll just simulate a successful submission
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setFormSubmitted(true);
+      setFormData({
+        fullName: '',
+        email: '',
+        phone: '',
+        country: '',
+        message: ''
+      });
+    } catch (error) {
+      console.error('Error submitting inquiry:', error);
+      setFormError('Failed to submit inquiry. Please try again.');
+    } finally {
+      setFormSubmitting(false);
+    }
+  };
+
+  const handlePrevImage = () => {
+    if (!car || !car.images || car.images.length === 0) return;
+    setActiveImageIndex((prev) => 
+      prev === 0 ? car.images.length - 1 : prev - 1
+    );
+  };
+
+  const handleNextImage = () => {
+    if (!car || !car.images || car.images.length === 0) return;
+    setActiveImageIndex((prev) => 
+      prev === car.images.length - 1 ? 0 : prev + 1
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-t-blue-600 border-b-blue-600 rounded-full animate-spin mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading car details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !car) {
+    return notFound();
   }
 
   const tabs = [
@@ -121,17 +196,17 @@ export default function CarDetailPage({ params }: CarDetailPageProps) {
     { id: 'inquire', label: 'Inquire' },
   ];
 
-  const handlePrevImage = () => {
-    setActiveImageIndex((prev) => 
-      prev === 0 ? car.images.length - 1 : prev - 1
-    );
-  };
+  // Default image if no images are available
+  const defaultImage = 'https://placehold.co/800x600/png?text=No+Image+Available';
+  const carImages = car.images && car.images.length > 0 
+    ? car.images.map((img: IVehicleImage) => updateImageUrl(img.url)) 
+    : [defaultImage];
 
-  const handleNextImage = () => {
-    setActiveImageIndex((prev) => 
-      prev === car.images.length - 1 ? 0 : prev + 1
-    );
-  };
+  // Combine car features and safety features
+  const allFeatures = [
+    ...(car.carFeature || []),
+    ...(car.carSafetyFeature || [])
+  ];
 
   return (
     <div className="bg-[#F3F4F6] min-h-screen">
@@ -150,12 +225,14 @@ export default function CarDetailPage({ params }: CarDetailPageProps) {
             {/* Main Image Gallery */}
             <div className="w-full lg:w-7/12 xl:w-8/12">
               <div className="relative rounded-lg overflow-hidden bg-gray-100 h-[400px] md:h-[500px]">
-                <Image
-                  src={car.images[activeImageIndex]}
+                <img
+                  src={carImages[activeImageIndex]}
                   alt={car.title}
-                  fill
-                  priority
-                  className="object-cover"
+                  className="object-cover w-full h-full"
+                  onError={(e) => {
+                    console.error(`Error loading image: ${carImages[activeImageIndex]}`);
+                    e.currentTarget.src = defaultImage;
+                  }}
                 />
                 
                 {/* Image Navigation */}
@@ -177,33 +254,39 @@ export default function CarDetailPage({ params }: CarDetailPageProps) {
                 </div>
                 
                 {/* Image Counter */}
-                <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-                  {activeImageIndex + 1} / {car.images.length}
-                </div>
+                {carImages.length > 1 && (
+                  <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                    {activeImageIndex + 1} / {carImages.length}
+                  </div>
+                )}
               </div>
               
               {/* Thumbnails */}
-              <div className="mt-4 grid grid-cols-5 gap-2">
-                {car.images.map((image, index) => (
-                  <button 
-                    key={index} 
-                    onClick={() => setActiveImageIndex(index)}
-                    className={`relative h-20 w-full rounded-md overflow-hidden transition-all ${
-                      activeImageIndex === index 
-                        ? 'border-2 border-blue-600 opacity-100' 
-                        : 'border border-gray-200 opacity-70 hover:opacity-100'
-                    }`}
-                  >
-                    <Image
-                      src={image}
-                      alt={`${car.title} thumbnail ${index + 1}`}
-                      fill
-                      sizes="(max-width: 768px) 20vw, 10vw"
-                      className="object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
+              {carImages.length > 1 && (
+                <div className="mt-4 grid grid-cols-5 gap-2">
+                  {carImages.map((image: string, index: number) => (
+                    <button 
+                      key={index} 
+                      onClick={() => setActiveImageIndex(index)}
+                      className={`relative h-20 w-full rounded-md overflow-hidden transition-all ${
+                        activeImageIndex === index 
+                          ? 'border-2 border-blue-600 opacity-100' 
+                          : 'border border-gray-200 opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img
+                        src={image}
+                        alt={`${car.title} thumbnail ${index + 1}`}
+                        className="object-cover w-full h-full"
+                        onError={(e) => {
+                          console.error(`Error loading thumbnail: ${image}`);
+                          e.currentTarget.src = defaultImage;
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             
             {/* Key Details */}
@@ -212,7 +295,7 @@ export default function CarDetailPage({ params }: CarDetailPageProps) {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h1 className="text-3xl font-bold">{car.title}</h1>
-                    <p className="text-gray-500 mt-1">Stock #: {car.stockNumber}</p>
+                    {car.stockNumber && <p className="text-gray-500 mt-1">Stock #: {car.stockNumber}</p>}
                   </div>
                   <div className="flex gap-2">
                     <button className="p-2 hover:bg-gray-100 rounded-full transition-colors" aria-label="Share">
@@ -242,60 +325,53 @@ export default function CarDetailPage({ params }: CarDetailPageProps) {
                       <Gauge size={20} className="text-gray-500 mr-3" />
                       <div>
                         <div className="text-sm text-gray-500">Mileage</div>
-                        <div className="font-medium">{car.mileage.toLocaleString()} {car.mileageUnit}</div>
+                        <div className="font-medium">{car.mileage} {car.mileageUnit}</div>
                       </div>
                     </div>
                     <div className="flex items-center">
                       <Fuel size={20} className="text-gray-500 mr-3" />
                       <div>
                         <div className="text-sm text-gray-500">Fuel</div>
-                        <div className="font-medium">{car.fuel}</div>
+                        <div className="font-medium">{car.fuelType || 'Not specified'}</div>
                       </div>
                     </div>
                     <div className="flex items-center">
                       <Settings size={20} className="text-gray-500 mr-3" />
                       <div>
                         <div className="text-sm text-gray-500">Transmission</div>
-                        <div className="font-medium">{car.transmission}</div>
+                        <div className="font-medium">{car.vehicleTransmission || 'Not specified'}</div>
                       </div>
                     </div>
                     <div className="flex items-center">
                       <Car size={20} className="text-gray-500 mr-3" />
                       <div>
                         <div className="text-sm text-gray-500">Body Type</div>
-                        <div className="font-medium">{car.bodyType}</div>
+                        <div className="font-medium">{car.bodyType || 'Not specified'}</div>
                       </div>
                     </div>
                     <div className="flex items-center">
                       <MapPin size={20} className="text-gray-500 mr-3" />
                       <div>
                         <div className="text-sm text-gray-500">Location</div>
-                        <div className="font-medium">{car.location}</div>
+                        <div className="font-medium">{car.location || 'Not specified'}</div>
                       </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="mb-6">
-                  <div className="bg-green-50 text-green-800 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium">
-                    <Check size={16} className="mr-1" /> Available for Export
-                  </div>
-                </div>
-                
-                <div className="flex flex-col gap-3">
-                  <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white">
-                    Request a Quote
+                <div className="space-y-4">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-lg flex items-center justify-center gap-2">
+                    <Phone size={18} />
+                    <span>Call for Price</span>
                   </Button>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Button variant="outline" size="lg" className="flex items-center justify-center">
-                      <Phone size={18} className="mr-2" />
-                      Call Us
-                    </Button>
-                    <Button variant="outline" size="lg" className="flex items-center justify-center">
-                      <Mail size={18} className="mr-2" />
-                      Email
-                    </Button>
-                  </div>
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-blue-600 text-blue-600 hover:bg-blue-50 py-6 rounded-lg flex items-center justify-center gap-2"
+                    onClick={scrollToInquiryForm}
+                  >
+                    <Mail size={18} />
+                    <span>Email Inquiry</span>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -308,14 +384,14 @@ export default function CarDetailPage({ params }: CarDetailPageProps) {
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="border-b">
             <div className="flex overflow-x-auto">
-              {tabs.map(tab => (
+              {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
+                  className={`px-6 py-4 text-sm font-medium whitespace-nowrap ${
                     activeTab === tab.id
                       ? 'text-blue-600 border-b-2 border-blue-600'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   {tab.label}
@@ -327,85 +403,81 @@ export default function CarDetailPage({ params }: CarDetailPageProps) {
           <div className="p-6">
             {/* Specifications Tab */}
             {activeTab === 'specifications' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-10">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
-                  <table className="w-full">
-                    <tbody>
-                      <tr className="border-b">
-                        <td className="py-3 text-gray-500">Make</td>
-                        <td className="py-3 text-right font-medium">{car.make}</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-3 text-gray-500">Model</td>
-                        <td className="py-3 text-right font-medium">{car.model}</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-3 text-gray-500">Year</td>
-                        <td className="py-3 text-right font-medium">{car.year}</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-3 text-gray-500">VIN</td>
-                        <td className="py-3 text-right font-medium">{car.vin}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3 text-gray-500">Condition</td>
-                        <td className="py-3 text-right font-medium">{car.condition}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                  <h3 className="text-lg font-semibold mb-4">Vehicle Information</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Make</span>
+                      <span className="font-medium">{car.make}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Model</span>
+                      <span className="font-medium">{car.model}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Year</span>
+                      <span className="font-medium">{car.year}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Body Type</span>
+                      <span className="font-medium">{car.bodyType || 'Not specified'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Color</span>
+                      <span className="font-medium">{car.color || 'Not specified'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Interior Color</span>
+                      <span className="font-medium">{car.interiorColor || 'Not specified'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Doors</span>
+                      <span className="font-medium">{car.doors || 'Not specified'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Seating Capacity</span>
+                      <span className="font-medium">{car.vehicleSeatingCapacity || 'Not specified'}</span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div>
                   <h3 className="text-lg font-semibold mb-4">Technical Specifications</h3>
-                  <table className="w-full">
-                    <tbody>
-                      <tr className="border-b">
-                        <td className="py-3 text-gray-500">Engine</td>
-                        <td className="py-3 text-right font-medium">{car.engineType}</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-3 text-gray-500">Transmission</td>
-                        <td className="py-3 text-right font-medium">{car.transmission}</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-3 text-gray-500">Drive Type</td>
-                        <td className="py-3 text-right font-medium">{car.driveType}</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-3 text-gray-500">Fuel Type</td>
-                        <td className="py-3 text-right font-medium">{car.fuel}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3 text-gray-500">Body Type</td>
-                        <td className="py-3 text-right font-medium">{car.bodyType}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Exterior & Interior</h3>
-                  <table className="w-full">
-                    <tbody>
-                      <tr className="border-b">
-                        <td className="py-3 text-gray-500">Exterior Color</td>
-                        <td className="py-3 text-right font-medium">{car.color}</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-3 text-gray-500">Interior Color</td>
-                        <td className="py-3 text-right font-medium">{car.interiorColor}</td>
-                      </tr>
-                      <tr className="border-b">
-                        <td className="py-3 text-gray-500">Doors</td>
-                        <td className="py-3 text-right font-medium">{car.doors}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-3 text-gray-500">Seating</td>
-                        <td className="py-3 text-right font-medium">{car.seatingCapacity} People</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                  <div className="space-y-3">
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Fuel Type</span>
+                      <span className="font-medium">{car.fuelType || 'Not specified'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Transmission</span>
+                      <span className="font-medium">{car.vehicleTransmission || 'Not specified'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Drive Type</span>
+                      <span className="font-medium">{car.driveType || 'Not specified'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Engine</span>
+                      <span className="font-medium">{car.engineType || 'Not specified'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Engine Capacity</span>
+                      <span className="font-medium">{car.engineCapacity || 'Not specified'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Mileage</span>
+                      <span className="font-medium">{car.mileage} {car.mileageUnit}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">Condition</span>
+                      <span className="font-medium">{car.condition || 'Not specified'}</span>
+                    </div>
+                    <div className="flex justify-between py-2 border-b border-gray-100">
+                      <span className="text-gray-600">VIN</span>
+                      <span className="font-medium">{car.vin || 'Not specified'}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -413,15 +485,19 @@ export default function CarDetailPage({ params }: CarDetailPageProps) {
             {/* Features Tab */}
             {activeTab === 'features' && (
               <div>
-                <h3 className="text-lg font-semibold mb-6">Vehicle Features</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {car.features.map((feature, index) => (
-                    <div key={index} className="flex items-center bg-gray-50 p-3 rounded-lg">
-                      <Check size={18} className="text-green-600 mr-3 flex-shrink-0" />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
+                <h3 className="text-lg font-semibold mb-4">Features & Options</h3>
+                {allFeatures.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {allFeatures.map((feature, index) => (
+                      <div key={index} className="flex items-center">
+                        <Check size={16} className="text-green-500 mr-2" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No features specified for this vehicle.</p>
+                )}
               </div>
             )}
             
@@ -429,114 +505,146 @@ export default function CarDetailPage({ params }: CarDetailPageProps) {
             {activeTab === 'description' && (
               <div>
                 <h3 className="text-lg font-semibold mb-4">Vehicle Description</h3>
-                <p className="text-gray-700 leading-relaxed">{car.description}</p>
+                {car.description ? (
+                  <p className="text-gray-700 whitespace-pre-line">{car.description}</p>
+                ) : (
+                  <p className="text-gray-500">No description available for this vehicle.</p>
+                )}
               </div>
             )}
             
             {/* Inquire Tab */}
             {activeTab === 'inquire' && (
-              <div>
-                <h3 className="text-lg font-semibold mb-6">Contact Us About This Vehicle</h3>
-                <form className="max-w-3xl">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                        Full Name *
-                      </label>
-                      <input
-                        type="text"
-                        id="name"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                        Email Address *
-                      </label>
-                      <input
-                        type="email"
-                        id="email"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        required
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone Number
-                      </label>
-                      <input
-                        type="tel"
-                        id="phone"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
-                        Country *
-                      </label>
-                      <input
-                        type="text"
-                        id="country"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        required
-                      />
-                    </div>
+              <div id="inquire-tab" ref={contactSectionRef}>
+                <h3 className="text-lg font-semibold mb-4">Contact Us About This Vehicle</h3>
+                
+                {formSubmitted ? (
+                  <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                    <h4 className="text-green-800 font-medium text-lg mb-2">Thank you for your inquiry!</h4>
+                    <p className="text-green-700">We have received your message and will contact you shortly.</p>
+                    <Button 
+                      className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => setFormSubmitted(false)}
+                    >
+                      Send Another Inquiry
+                    </Button>
                   </div>
-                  
-                  <div className="mb-6">
-                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                      Message *
-                    </label>
-                    <textarea
-                      id="message"
-                      rows={5}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      defaultValue={`I am interested in the ${car.year} ${car.make} ${car.model} (Stock #${car.stockNumber}). Please contact me with more information.`}
-                      required
-                    ></textarea>
-                  </div>
-                  
-                  <Button type="submit" className="px-8">
-                    Submit Inquiry
-                  </Button>
-                </form>
+                ) : (
+                  <form className="space-y-4" onSubmit={handleFormSubmit}>
+                    {formError && (
+                      <div className="bg-red-50 border border-red-200 rounded-md p-3 text-red-700">
+                        {formError}
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Full Name <span className="text-red-500">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          name="fullName"
+                          value={formData.fullName}
+                          onChange={handleFormChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Email <span className="text-red-500">*</span>
+                        </label>
+                        <input 
+                          type="email" 
+                          name="email"
+                          value={formData.email}
+                          onChange={handleFormChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Phone
+                        </label>
+                        <input 
+                          type="tel" 
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleFormChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Country
+                        </label>
+                        <input 
+                          type="text" 
+                          name="country"
+                          value={formData.country}
+                          onChange={handleFormChange}
+                          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Message <span className="text-red-500">*</span>
+                      </label>
+                      <textarea 
+                        rows={4} 
+                        name="message"
+                        value={formData.message}
+                        onChange={handleFormChange}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+                        required
+                      ></textarea>
+                    </div>
+                    <Button 
+                      type="submit"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-lg"
+                      disabled={formSubmitting}
+                    >
+                      {formSubmitting ? 'Submitting...' : 'Submit Inquiry'}
+                    </Button>
+                  </form>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
       
-      {/* Similar Cars */}
-      <div className="container mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold mb-6">Similar Vehicles</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {car.similarCars.map((similarCar) => (
-            <Link href={`/cars/${similarCar.id}`} key={similarCar.id} className="group">
-              <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+      {/* Similar Cars Section */}
+      {similarCars.length > 0 && (
+        <div className="container mx-auto px-4 py-8">
+          <h2 className="text-2xl font-bold mb-6">Similar Vehicles</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {similarCars.map((similarCar) => (
+              <Link href={`/cars/${similarCar._id}`} key={similarCar._id} className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 <div className="relative h-48">
                   <Image
-                    src={similarCar.image}
+                    src={similarCar.images && similarCar.images.length > 0 ? similarCar.images[0].url : defaultImage}
                     alt={similarCar.title}
                     fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="object-cover"
                   />
                 </div>
                 <div className="p-4">
-                  <h3 className="font-semibold text-lg group-hover:text-blue-600 transition-colors">{similarCar.title}</h3>
-                  <div className="flex justify-between items-center mt-2">
-                    <div className="font-bold text-lg">${similarCar.price.toLocaleString()}</div>
-                    <div className="text-gray-500 text-sm">{similarCar.mileage.toLocaleString()} km</div>
+                  <h3 className="font-semibold text-lg">{similarCar.title}</h3>
+                  <div className="text-blue-600 font-bold mt-1">${similarCar.price.toLocaleString()}</div>
+                  <div className="flex items-center text-sm text-gray-500 mt-2">
+                    <Gauge size={14} className="mr-1" />
+                    <span>{similarCar.mileage} {similarCar.mileageUnit}</span>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 } 

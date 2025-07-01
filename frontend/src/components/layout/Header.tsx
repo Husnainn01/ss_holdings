@@ -12,11 +12,101 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Phone, Menu, X, ChevronDown, Globe, MapPin } from 'lucide-react';
+import Image from 'next/image';
+
+interface MenuItem {
+  name: string;
+  href: string;
+}
+
+interface MegaMenuItem {
+  name: string;
+  href: string;
+  icon: string;
+  imageUrl?: string;
+}
+
+interface MegaMenuSection {
+  title: string;
+  items: MegaMenuItem[];
+  viewAll?: {
+    name: string;
+    href: string;
+  };
+}
+
+interface NavItem {
+  name: string;
+  href: string;
+  megaMenu?: boolean;
+  sections?: MegaMenuSection[];
+}
+
+const MegaMenu = ({ sections }: { sections: MegaMenuSection[] }) => {
+  return (
+    <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-screen max-w-5xl bg-white rounded-lg shadow-lg overflow-hidden z-50">
+      <div className="grid grid-cols-3 gap-2 p-4">
+        {sections.map((section, index) => (
+          <div key={index} className="p-2">
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">{section.title}</h3>
+            <ul className="space-y-2">
+              {section.items.map((item, idx) => (
+                <li key={idx}>
+                  <Link href={item.href} className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md transition-colors">
+                    {item.imageUrl ? (
+                      <Image 
+                        src={item.imageUrl}
+                        width={20}
+                        height={20}
+                        alt={item.name}
+                        className="w-5 h-5 object-contain"
+                        onError={(e) => {
+                          // Fallback to emoji if image fails to load
+                          e.currentTarget.style.display = 'none';
+                          const parent = e.currentTarget.parentElement;
+                          if (parent) {
+                            const span = document.createElement('span');
+                            span.textContent = item.icon;
+                            span.className = 'w-5 h-5 flex items-center justify-center';
+                            parent.insertBefore(span, parent.firstChild);
+                          }
+                        }}
+                      />
+                    ) : (
+                      <span className="w-5 h-5 flex items-center justify-center">{item.icon}</span>
+                    )}
+                    <span>{item.name}</span>
+                  </Link>
+                </li>
+              ))}
+              {section.viewAll && (
+                <li className="mt-4">
+                  <Link 
+                    href={section.viewAll.href} 
+                    className="flex items-center justify-center w-full p-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors border border-blue-200"
+                  >
+                    {section.viewAll.name}
+                  </Link>
+                </li>
+              )}
+            </ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  
+  // State for dynamic data
+  const [makes, setMakes] = useState<MegaMenuItem[]>([]);
+  const [vehicleTypes, setVehicleTypes] = useState<MegaMenuItem[]>([]);
+  const [locations, setLocations] = useState<MegaMenuItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Add scroll event listener
   useEffect(() => {
@@ -31,20 +121,134 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+  
+  // Fetch dynamic data for the mega menu
+  useEffect(() => {
+    const fetchMenuData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch makes
+        const makesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/options/category/makes`);
+        const makesData = await makesResponse.json();
+        
+        // Fetch body types
+        const typesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/options/category/bodyTypes`);
+        const typesData = await typesResponse.json();
+        
+        // Fetch locations
+        const locationsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/vehicles/locations/list`);
+        const locationsData = await locationsResponse.json();
+        
+        // Map makes data to menu items with images - limit to 8
+        const mappedMakes = makesData.data.map((make: any) => {
+          // Use SVG if available, otherwise use image or fallback
+          const imageUrl = make.svgUrl || make.imageUrl || `/brands/${make.name.toLowerCase()}.svg`;
+          
+          return {
+            name: make.name,
+            href: `/cars?make=${encodeURIComponent(make.name)}`,
+            icon: '🚗', // Default icon as fallback
+            imageUrl: imageUrl // Add image URL for brand logo
+          };
+        }).slice(0, 8);
+        
+        // Map types data to menu items - limit to 8
+        const mappedTypes = typesData.data.map((type: any) => {
+          // Map body types to appropriate icons
+          let icon = '🚗';
+          if (type.name.toLowerCase().includes('suv')) icon = '🚙';
+          else if (type.name.toLowerCase().includes('truck')) icon = '🚚';
+          else if (type.name.toLowerCase().includes('van')) icon = '🚐';
+          else if (type.name.toLowerCase().includes('commercial')) icon = '🚛';
+          else if (type.name.toLowerCase().includes('agricultural')) icon = '🚜';
+          else if (type.name.toLowerCase().includes('construction')) icon = '🏗️';
+          else if (type.name.toLowerCase().includes('machinery')) icon = '⚙️';
+          else if (type.name.toLowerCase().includes('motorcycle')) icon = '🏍️';
+          
+          return {
+            name: type.name,
+            href: `/cars?bodyType=${encodeURIComponent(type.name)}`,
+            icon
+          };
+        }).slice(0, 8);
+        
+        // Map locations data to menu items with flags - limit to 8
+        const mappedLocations = locationsData.map((location: any) => {
+          // Map common countries to flag emojis
+          let flag = '🏳️';
+          if (location.name.includes('Japan')) flag = '🇯🇵';
+          else if (location.name.includes('Singapore')) flag = '🇸🇬';
+          else if (location.name.includes('Dubai') || location.name.includes('UAE')) flag = '🇦🇪';
+          else if (location.name.includes('Thailand')) flag = '🇹🇭';
+          else if (location.name.includes('Korea')) flag = '🇰🇷';
+          else if (location.name.includes('Australia')) flag = '🇦🇺';
+          else if (location.name.includes('New Zealand')) flag = '🇳🇿';
+          else if (location.name.includes('Canada')) flag = '🇨🇦';
+          else if (location.name.includes('United States') || location.name.includes('USA')) flag = '🇺🇸';
+          else if (location.name.includes('United Kingdom') || location.name.includes('UK')) flag = '🇬🇧';
+          
+          return {
+            name: location.name,
+            href: `/cars?location=${encodeURIComponent(location.name)}`,
+            icon: flag
+          };
+        }).slice(0, 8);
+        
+        setMakes(mappedMakes);
+        setVehicleTypes(mappedTypes);
+        setLocations(mappedLocations);
+      } catch (error) {
+        console.error('Error fetching menu data:', error);
+        // Fallback to static data if API fails
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchMenuData();
+  }, []);
 
-  const navItems = [
+  // Create dynamic nav items with fetched data
+  const navItems: NavItem[] = [
     { name: 'Home', href: '/' },
     { 
       name: 'Cars', 
       href: '/cars',
-      dropdown: [
-        { name: 'All Cars', href: '/cars' },
-        { name: 'JDM Cars', href: '/cars?category=jdm' },
-        { name: 'Luxury Cars', href: '/cars?category=luxury' },
-        { name: 'SUVs', href: '/cars?category=suv' },
+      megaMenu: true,
+      sections: [
+        {
+          title: 'Search By Make',
+          items: isLoading ? [
+            { name: 'Toyota', href: '/cars?make=Toyota', icon: '🚗', imageUrl: '/brands/toyota.svg' },
+            { name: 'Honda', href: '/cars?make=Honda', icon: '🚗', imageUrl: '/brands/honda.svg' },
+            { name: 'Nissan', href: '/cars?make=Nissan', icon: '🚗', imageUrl: '/brands/nissan.svg' },
+          ] : makes,
+          viewAll: { name: 'View All Makes', href: '/cars?filter=makes' }
+        },
+        {
+          title: 'Search By Type',
+          items: isLoading ? [
+            { name: 'Sedan', href: '/cars?bodyType=Sedan', icon: '🚘' },
+            { name: 'SUV', href: '/cars?bodyType=SUV', icon: '🚙' },
+            { name: 'Truck', href: '/cars?bodyType=Truck', icon: '🚚' },
+          ] : vehicleTypes,
+          viewAll: { name: 'View All Types', href: '/cars?filter=types' }
+        },
+        {
+          title: 'Country List',
+          items: isLoading ? [
+            { name: 'Japan', href: '/cars?location=Japan', icon: '🇯🇵' },
+            { name: 'Singapore', href: '/cars?location=Singapore', icon: '🇸🇬' },
+            { name: 'Dubai', href: '/cars?location=Dubai', icon: '🇦🇪' },
+          ] : locations,
+          viewAll: { name: 'View All Countries', href: '/cars?filter=countries' }
+        }
       ]
     },
+    { name: 'Auction', href: '/auction' },
     { name: 'About Us', href: '/about' },
+    { name: 'Banking Info', href: '/banking' },
     { name: 'Contact', href: '/contact' },
     { name: 'FAQ', href: '/faq' },
   ];
@@ -116,8 +320,8 @@ export default function Header() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-1">
-              {navItems.map((item) => (
-                item.dropdown ? (
+              {navItems.map((item, index) => (
+                item.megaMenu ? (
                   <div key={item.name} className="relative" onMouseEnter={() => setActiveDropdown(item.name)} onMouseLeave={() => setActiveDropdown(null)}>
                     <button 
                       className={`px-4 py-2 font-medium hover:text-red-600 transition-colors flex items-center ${
@@ -134,17 +338,54 @@ export default function Header() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: 10 }}
                           transition={{ duration: 0.2 }}
-                          className="absolute left-0 top-full mt-1 bg-white shadow-lg rounded-md overflow-hidden w-48 border border-gray-100"
+                          className="absolute left-1/2 transform -translate-x-1/2 top-full mt-1 bg-white shadow-lg rounded-md overflow-hidden border border-gray-100 w-[800px]"
                         >
-                          <div className="py-1">
-                            {item.dropdown.map((subItem) => (
-                              <Link 
-                                key={subItem.name} 
-                                href={subItem.href}
-                                className="block px-4 py-2 text-sm hover:bg-gray-50 hover:text-red-600"
-                              >
-                                {subItem.name}
-                              </Link>
+                          <div className="grid grid-cols-3 gap-0">
+                            {item.sections?.map((section, sectionIndex) => (
+                              <div key={section.title} className={`p-4 ${sectionIndex < (item.sections?.length || 0) - 1 ? 'border-r border-gray-100' : ''}`}>
+                                <h3 className="font-medium text-lg mb-3">{section.title}</h3>
+                                <div className="space-y-2">
+                                  {section.items.map((subItem, subIndex) => (
+                                    <Link 
+                                      key={subItem.name} 
+                                      href={subItem.href}
+                                      className="flex items-center py-1.5 hover:text-red-600 transition-colors"
+                                      onClick={() => setActiveDropdown(null)}
+                                    >
+                                      {section.title === 'Search By Make' && subItem.imageUrl ? (
+                                        <div className="w-6 h-6 mr-2 flex items-center justify-center">
+                                          <img 
+                                            src={subItem.imageUrl}
+                                            alt={subItem.name}
+                                            className="max-w-full max-h-full object-contain"
+                                            onError={(e) => {
+                                              // Fallback to emoji if image fails to load
+                                              e.currentTarget.style.display = 'none';
+                                              const nextElement = e.currentTarget.nextSibling as HTMLElement;
+                                              if (nextElement) nextElement.style.display = 'block';
+                                            }}
+                                          />
+                                          <span className="hidden">{subItem.icon}</span>
+                                        </div>
+                                      ) : (
+                                        <span className="mr-2">{subItem.icon}</span>
+                                      )}
+                                      <span>{subItem.name}</span>
+                                    </Link>
+                                  ))}
+                                  {section.viewAll && (
+                                    <div className="pt-2 mt-2 border-t border-gray-100">
+                                      <Link 
+                                        href={section.viewAll.href}
+                                        className="text-blue-600 hover:text-blue-800 text-sm"
+                                        onClick={() => setActiveDropdown(null)}
+                                      >
+                                        {section.viewAll.name}
+                                      </Link>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </motion.div>
@@ -206,9 +447,9 @@ export default function Header() {
                   
                   <div className="flex-1 overflow-auto py-6 px-4">
                     <nav className="flex flex-col space-y-1">
-                      {navItems.map((item) => (
+                      {navItems.map((item, index) => (
                         <div key={item.name}>
-                          {item.dropdown ? (
+                          {item.megaMenu ? (
                             <div className="py-2">
                               <button 
                                 onClick={() => setActiveDropdown(activeDropdown === item.name ? null : item.name)}
@@ -232,18 +473,52 @@ export default function Header() {
                                     transition={{ duration: 0.2 }}
                                     className="overflow-hidden"
                                   >
-                                    <div className="pl-4 py-2 border-l-2 border-gray-100 ml-2 space-y-2">
-                                      {item.dropdown.map((subItem) => (
-                                        <Link 
-                                          key={subItem.name} 
-                                          href={subItem.href}
-                                          className="block py-1.5 text-base text-gray-600 hover:text-red-600"
-                                          onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                          {subItem.name}
-                                        </Link>
-                                      ))}
-                                    </div>
+                                    {item.sections?.map((section, sectionIndex) => (
+                                      <div key={section.title} className="mt-2">
+                                        <h4 className="font-medium text-base px-2 py-1 bg-gray-50">{section.title}</h4>
+                                        <div className="pl-4 py-2 border-l-2 border-gray-100 ml-2 space-y-2">
+                                          {section.items.map((subItem, subIndex) => (
+                                            <Link 
+                                              key={subItem.name} 
+                                              href={subItem.href}
+                                              className="flex items-center py-1.5 text-base text-gray-600 hover:text-red-600"
+                                              onClick={() => setIsMobileMenuOpen(false)}
+                                            >
+                                              {section.title === 'Search By Make' && subItem.imageUrl ? (
+                                                <div className="w-6 h-6 mr-2 flex items-center justify-center">
+                                                  <img 
+                                                    src={subItem.imageUrl}
+                                                    alt={subItem.name}
+                                                    className="max-w-full max-h-full object-contain"
+                                                    onError={(e) => {
+                                                      // Fallback to emoji if image fails to load
+                                                      e.currentTarget.style.display = 'none';
+                                                      const nextElement = e.currentTarget.nextSibling as HTMLElement;
+                                                      if (nextElement) nextElement.style.display = 'block';
+                                                    }}
+                                                  />
+                                                  <span className="hidden">{subItem.icon}</span>
+                                                </div>
+                                              ) : (
+                                                <span className="mr-2">{subItem.icon}</span>
+                                              )}
+                                              <span>{subItem.name}</span>
+                                            </Link>
+                                          ))}
+                                          {section.viewAll && (
+                                            <div className="pt-2 mt-2 border-t border-gray-100">
+                                              <Link 
+                                                href={section.viewAll.href}
+                                                className="flex items-center py-1.5 text-blue-600 hover:text-blue-800"
+                                                onClick={() => setIsMobileMenuOpen(false)}
+                                              >
+                                                <span>View All {section.title.split(' ').pop()}</span>
+                                              </Link>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))}
                                   </motion.div>
                                 )}
                               </AnimatePresence>

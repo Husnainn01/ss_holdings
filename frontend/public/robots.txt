@@ -1,0 +1,10 @@
+# Allow all web crawlers
+User-agent: *
+Allow: /
+
+# Disallow admin area
+User-agent: *
+Disallow: /admin/
+
+# Sitemap location
+Sitemap: https://ssholdings.com/sitemap.xml 

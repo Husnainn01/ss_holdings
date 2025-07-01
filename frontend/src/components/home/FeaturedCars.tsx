@@ -9,17 +9,20 @@ import { ArrowRight } from 'lucide-react';
 interface Car {
   id: string;
   title: string;
-  stockNumber: string;
+  stockNumber?: string;
   price: number;
   year: number;
   make: string;
   model: string;
-  mileage?: number;
+  mileage?: number | string;
   mileageUnit?: 'km' | 'miles';
   transmission: string;
   fuel: string;
-  status: 'in-stock' | 'sold';
+  status?: 'in-stock' | 'sold';
   imageUrl?: string;
+  location?: string;
+  bodyType?: string;
+  featured?: boolean;
 }
 
 interface FeaturedCarsProps {
@@ -31,8 +34,13 @@ interface FeaturedCarsProps {
 export default function FeaturedCars({ 
   title = "Featured Vehicles", 
   subtitle = "Explore our selection of premium vehicles available for export worldwide",
-  cars 
+  cars = [] 
 }: FeaturedCarsProps) {
+  // Don't render the component if there are no cars
+  if (!cars || cars.length === 0) {
+    return null;
+  }
+  
   return (
     <section className="py-10 bg-gray-50">
       <div className="container mx-auto px-4">

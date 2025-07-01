@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CDN Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    .test-image {
+      max-width: 100%;
+      height: auto;
+      border: 1px solid #eee;
+    }
+    .status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    .success {
+      color: green;
+    }
+    .error {
+      color: red;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    input {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>CDN Connection Test</h1>
+  
+  <div class="test-section">
+    <h2>1. DNS Resolution Test</h2>
+    <p>Testing if cdn.ss.holdings can be resolved...</p>
+    <div id="dns-status" class="status">Testing...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>2. Image Load Test</h2>
+    <p>Enter a CDN image URL to test:</p>
+    <input type="text" id="image-url" placeholder="https://cdn.ss.holdings/uploads/vehicles/example.jpg">
+    <button onclick="testImage()">Test Image</button>
+    <div id="image-container">
+      <p>Image will appear here if successful</p>
+    </div>
+    <div id="image-status" class="status">Waiting for test...</div>
+  </div>
+  
+  <div class="test-section">
+    <h2>3. Alternative URLs</h2>
+    <p>If the CDN URL doesn't work, try these alternatives:</p>
+    <ul id="alternative-urls">
+      <li><a href="#" onclick="testAlternative('http://136.0.157.42/cdn.ss.holdings/uploads/vehicles/'); return false;">Direct IP: http://136.0.157.42/cdn.ss.holdings/uploads/vehicles/</a></li>
+      <li><a href="#" onclick="testAlternative('https://ss.holdings/cdn.ss.holdings/uploads/vehicles/'); return false;">Main domain: https://ss.holdings/cdn.ss.holdings/uploads/vehicles/</a></li>
+    </ul>
+    <div id="alternative-status" class="status">Waiting for test...</div>
+  </div>
+
+  <script>
+    // Test DNS resolution
+    function testDNS() {
+      const dnsStatus = document.getElementById('dns-status');
+      
+      fetch('https://cdn.ss.holdings/test.txt', { mode: 'no-cors' })
+        .then(() => {
+          dnsStatus.textContent = 'Success! cdn.ss.holdings can be resolved.';
+          dnsStatus.className = 'status success';
+        })
+        .catch(error => {
+          dnsStatus.textContent = `Error: ${error.message}`;
+          dnsStatus.className = 'status error';
+        });
+    }
+    
+    // Test image loading
+    function testImage() {
+      const imageUrl = document.getElementById('image-url').value;
+      const imageStatus = document.getElementById('image-status');
+      const imageContainer = document.getElementById('image-container');
+      
+      if (!imageUrl) {
+        imageStatus.textContent = 'Please enter an image URL';
+        imageStatus.className = 'status error';
+        return;
+      }
+      
+      imageStatus.textContent = 'Loading...';
+      imageStatus.className = 'status';
+      
+      const img = new Image();
+      img.onload = function() {
+        imageStatus.textContent = 'Success! Image loaded correctly.';
+        imageStatus.className = 'status success';
+        
+        imageContainer.innerHTML = '';
+        img.className = 'test-image';
+        imageContainer.appendChild(img);
+      };
+      
+      img.onerror = function() {
+        imageStatus.textContent = 'Error: Failed to load image.';
+        imageStatus.className = 'status error';
+        imageContainer.innerHTML = '<p>Image failed to load</p>';
+      };
+      
+      img.src = imageUrl;
+    }
+    
+    // Test alternative URLs
+    function testAlternative(baseUrl) {
+      const alternativeStatus = document.getElementById('alternative-status');
+      const imageContainer = document.getElementById('image-container');
+      const filename = prompt('Enter image filename to test:', 'example.jpg');
+      
+      if (!filename) return;
+      
+      const fullUrl = baseUrl + filename;
+      
+      alternativeStatus.textContent = `Testing ${fullUrl}...`;
+      alternativeStatus.className = 'status';
+      
+      const img = new Image();
+      img.onload = function() {
+        alternativeStatus.textContent = `Success! Image loaded from ${fullUrl}`;
+        alternativeStatus.className = 'status success';
+        
+        imageContainer.innerHTML = '';
+        img.className = 'test-image';
+        imageContainer.appendChild(img);
+        
+        // Update the image URL input
+        document.getElementById('image-url').value = fullUrl;
+      };
+      
+      img.onerror = function() {
+        alternativeStatus.textContent = `Error: Failed to load image from ${fullUrl}`;
+        alternativeStatus.className = 'status error';
+      };
+      
+      img.src = fullUrl;
+    }
+    
+    // Run DNS test on page load
+    window.onload = testDNS;
+  </script>
+</body>
+</html> 

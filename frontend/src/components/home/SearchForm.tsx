@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ChevronRight, Car, Calendar, CreditCard, Gauge } from "lucide-react";
+import { Search, Filter, ChevronRight, Car, Calendar, CreditCard, Gauge, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { vehicleAPI } from '@/services/api';
+import { getOptionsByCategory, Option } from '@/services/optionsAPI';
 
 interface SearchFormProps {
   className?: string;
@@ -17,11 +19,111 @@ export default function SearchForm({ className }: SearchFormProps) {
     make: '',
     model: '',
     steering: '',
-    type: '',
-    priceRange: '',
+    bodyType: '',
+    minPrice: '',
+    maxPrice: '',
     yearFrom: '',
     yearTo: '',
+    condition: '',
   });
+
+  // State for options data
+  const [makes, setMakes] = useState<Option[]>([]);
+  const [models, setModels] = useState<{name: string, count: number}[]>([]);
+  const [bodyTypes, setBodyTypes] = useState<Option[]>([]);
+  const [conditions, setConditions] = useState<Option[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [matchingVehicles, setMatchingVehicles] = useState(0);
+  const [isCountLoading, setIsCountLoading] = useState(false);
+
+  // Fetch options data
+  useEffect(() => {
+    const fetchOptions = async () => {
+      try {
+        setIsLoading(true);
+        const [makesData, bodyTypesData, conditionsData] = await Promise.all([
+          getOptionsByCategory('makes'),
+          getOptionsByCategory('bodyTypes'),
+          getOptionsByCategory('conditionTypes')
+        ]);
+        
+        setMakes(makesData);
+        setBodyTypes(bodyTypesData);
+        setConditions(conditionsData);
+      } catch (error) {
+        console.error("Error fetching options:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchOptions();
+  }, []);
+  
+  // Fetch models when make changes
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        // Reset models when make is cleared
+        if (!searchParams.make) {
+          setModels([]);
+          return;
+        }
+        
+        setIsLoadingModels(true);
+        const response = await vehicleAPI.getModelsByMake(searchParams.make);
+        setModels(response.data);
+      } catch (error) {
+        console.error("Error fetching models:", error);
+        setModels([]);
+      } finally {
+        setIsLoadingModels(false);
+      }
+    };
+    
+    fetchModels();
+  }, [searchParams.make]);
+
+  // Update matching vehicles count when search params change
+  useEffect(() => {
+    const fetchMatchingVehicles = async () => {
+      try {
+        setIsCountLoading(true);
+        
+        // Create query params object with only non-empty values
+        const queryParams: Record<string, string> = {};
+        if (searchParams.make) queryParams.make = searchParams.make;
+        if (searchParams.model) queryParams.model = searchParams.model;
+        if (searchParams.bodyType) queryParams.bodyType = searchParams.bodyType;
+        if (searchParams.condition) queryParams.condition = searchParams.condition;
+        if (searchParams.yearFrom) queryParams.yearFrom = searchParams.yearFrom;
+        if (searchParams.yearTo) queryParams.yearTo = searchParams.yearTo;
+        if (searchParams.minPrice) queryParams.minPrice = searchParams.minPrice;
+        if (searchParams.maxPrice) queryParams.maxPrice = searchParams.maxPrice;
+        
+        // Only fetch if at least one filter is applied
+        if (Object.keys(queryParams).length > 0) {
+          const response = await vehicleAPI.getVehicles(queryParams);
+          setMatchingVehicles(response.data.total);
+        } else {
+          // If no filters, set to 0 to hide the count
+          setMatchingVehicles(0);
+        }
+      } catch (error) {
+        console.error("Error fetching matching vehicles:", error);
+      } finally {
+        setIsCountLoading(false);
+      }
+    };
+    
+    // Use debounce to avoid too many API calls
+    const debounceTimeout = setTimeout(() => {
+      fetchMatchingVehicles();
+    }, 500);
+    
+    return () => clearTimeout(debounceTimeout);
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -61,6 +163,15 @@ export default function SearchForm({ className }: SearchFormProps) {
     visible: { opacity: 1, y: 0 }
   };
 
+  if (isLoading) {
+    return (
+      <div className={`bg-gradient-to-r from-[#1a3d50] to-[#2c5878] rounded-lg shadow-lg overflow-hidden ${className} p-8 flex justify-center items-center`}>
+        <Loader2 className="h-8 w-8 animate-spin text-white" />
+        <span className="ml-2 text-white">Loading search options...</span>
+      </div>
+    );
+  }
+
   return (
     <div className={`bg-gradient-to-r from-[#1a3d50] to-[#2c5878] rounded-lg shadow-lg overflow-hidden ${className}`}>
       <div className="bg-[#162e3d] px-5 py-3 flex items-center justify-between">
@@ -97,12 +208,9 @@ export default function SearchForm({ className }: SearchFormProps) {
                 className="w-full rounded-md border border-gray-200 py-2.5 pl-10 pr-8 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               >
                 <option value="">Select Make</option>
-                <option value="toyota">Toyota</option>
-                <option value="honda">Honda</option>
-                <option value="nissan">Nissan</option>
-                <option value="mazda">Mazda</option>
-                <option value="suzuki">Suzuki</option>
-                <option value="mitsubishi">Mitsubishi</option>
+                {makes.map(make => (
+                  <option key={make._id} value={make.name}>{make.name}</option>
+                ))}
               </select>
               <label htmlFor="make" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
                 Make
@@ -119,16 +227,27 @@ export default function SearchForm({ className }: SearchFormProps) {
                 value={searchParams.model}
                 onChange={handleChange}
                 className="w-full rounded-md border border-gray-200 py-2.5 pl-10 pr-8 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                disabled={!searchParams.make || isLoadingModels}
               >
                 <option value="">Select Model</option>
-                <option value="camry">Camry</option>
-                <option value="corolla">Corolla</option>
-                <option value="civic">Civic</option>
-                <option value="accord">Accord</option>
+                {isLoadingModels ? (
+                  <option value="" disabled>Loading models...</option>
+                ) : (
+                  models.map(model => (
+                    <option key={model.name} value={model.name}>
+                      {model.name} ({model.count})
+                    </option>
+                  ))
+                )}
               </select>
               <label htmlFor="model" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
                 Model
               </label>
+              {isLoadingModels && (
+                <div className="absolute right-8 top-1/2 -translate-y-1/2">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                </div>
+              )}
             </motion.div>
             
             <motion.div variants={itemVariants} className="relative">
@@ -150,7 +269,7 @@ export default function SearchForm({ className }: SearchFormProps) {
                 ))}
               </select>
               <label htmlFor="yearFrom" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
-                Year
+                Year From
               </label>
             </motion.div>
           </div>
@@ -165,21 +284,22 @@ export default function SearchForm({ className }: SearchFormProps) {
             >
               <div className="relative">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <Gauge className="h-4 w-4" />
+                  <Car className="h-4 w-4" />
                 </div>
                 <select
-                  id="steering"
-                  name="steering"
-                  value={searchParams.steering}
+                  id="bodyType"
+                  name="bodyType"
+                  value={searchParams.bodyType}
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-200 py-2.5 pl-10 pr-8 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 >
-                  <option value="">Any Steering</option>
-                  <option value="left">Left Hand Drive</option>
-                  <option value="right">Right Hand Drive</option>
+                  <option value="">Any Body Type</option>
+                  {bodyTypes.map(type => (
+                    <option key={type._id} value={type.name}>{type.name}</option>
+                  ))}
                 </select>
-                <label htmlFor="steering" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
-                  Steering
+                <label htmlFor="bodyType" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
+                  Body Type
                 </label>
               </div>
               
@@ -188,20 +308,19 @@ export default function SearchForm({ className }: SearchFormProps) {
                   <Car className="h-4 w-4" />
                 </div>
                 <select
-                  id="type"
-                  name="type"
-                  value={searchParams.type}
+                  id="condition"
+                  name="condition"
+                  value={searchParams.condition}
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-200 py-2.5 pl-10 pr-8 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 >
-                  <option value="">Any Type</option>
-                  <option value="sedan">Sedan</option>
-                  <option value="suv">SUV</option>
-                  <option value="truck">Truck</option>
-                  <option value="van">Van</option>
+                  <option value="">Any Condition</option>
+                  {conditions.map(condition => (
+                    <option key={condition._id} value={condition.name}>{condition.name}</option>
+                  ))}
                 </select>
-                <label htmlFor="type" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
-                  Type
+                <label htmlFor="condition" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
+                  Condition
                 </label>
               </div>
               
@@ -210,30 +329,44 @@ export default function SearchForm({ className }: SearchFormProps) {
                   <CreditCard className="h-4 w-4" />
                 </div>
                 <select
-                  id="priceRange"
-                  name="priceRange"
-                  value={searchParams.priceRange}
+                  id="minPrice"
+                  name="minPrice"
+                  value={searchParams.minPrice}
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-200 py-2.5 pl-10 pr-8 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 >
-                  <option value="">Any Price</option>
-                  <option value="0-5000">$0 - $5,000</option>
-                  <option value="5000-10000">$5,000 - $10,000</option>
-                  <option value="10000-15000">$10,000 - $15,000</option>
-                  <option value="15000+">$15,000+</option>
+                  <option value="">Min Price</option>
+                  <option value="5000">$5,000</option>
+                  <option value="10000">$10,000</option>
+                  <option value="15000">$15,000</option>
+                  <option value="20000">$20,000</option>
+                  <option value="25000">$25,000</option>
+                  <option value="30000">$30,000</option>
                 </select>
-                <label htmlFor="priceRange" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
-                  Price Range
+                <label htmlFor="minPrice" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
+                  Min Price
                 </label>
               </div>
             </motion.div>
           )}
           
           <div className="flex justify-between items-center">
-            <div className="text-white text-xs bg-blue-500/20 px-3 py-1 rounded-full">
-              <span className="font-semibold">12</span> cars match your criteria
-            </div>
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            {(matchingVehicles > 0 || isCountLoading) && (
+              <div className="text-white text-xs bg-blue-500/20 px-3 py-1 rounded-full flex items-center">
+                {isCountLoading ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    <span>Searching...</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold">{matchingVehicles}</span>
+                    <span className="ml-1">cars match your criteria</span>
+                  </>
+                )}
+              </div>
+            )}
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="ml-auto">
               <Button 
                 type="submit" 
                 className="bg-red-600 hover:bg-red-700 text-white text-sm py-2 px-6 rounded-md flex items-center"

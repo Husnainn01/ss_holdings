@@ -3,6 +3,8 @@
 import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Loader2, Lock, Mail, ArrowLeft } from "lucide-react";
+import { authAPI } from "@/services/api";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -16,47 +18,55 @@ export default function AdminLogin() {
     setIsLoading(true);
     setError("");
 
-    // For demo, we'll just do a simple mock authentication
-    // In a real app, you would call an API endpoint
-    setTimeout(() => {
-      if (email === "admin@example.com" && password === "password") {
-        // Mock successful login
-        // In a real app, you'd store a token in localStorage/cookie
-        localStorage.setItem("adminAuth", "true");
+    try {
+      // Call the real authentication API
+      const response = await authAPI.login(email, password);
+      
+      // Store the token in localStorage
+      if (response.data && response.data.token) {
+        localStorage.setItem("adminAuth", response.data.token);
         router.push("/admin/dashboard");
       } else {
-        setError("Invalid email or password");
+        setError("Invalid response from server");
       }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      setError(
+        error.response?.data?.message || 
+        "Invalid email or password. Please try again."
+      );
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-gray-100">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <div className="flex justify-center items-center">
-            <div className="bg-red-600 text-white w-10 h-10 rounded-full flex items-center justify-center text-xl font-bold">SS</div>
-            <span className="ml-2 text-gray-900 text-2xl font-semibold">Holdings</span>
+    <div className="min-h-screen flex flex-col justify-center bg-gradient-to-br from-indigo-50 to-slate-100 py-12 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="flex justify-center">
+          <div className="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white h-12 w-12 rounded-xl flex items-center justify-center text-xl font-bold shadow-lg">
+            SS
           </div>
-          <h1 className="mt-6 text-3xl font-extrabold text-gray-900">Admin Login</h1>
-          <p className="mt-2 text-gray-600">
-            Please sign in to access the admin dashboard
-          </p>
         </div>
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          Admin Login
+        </h2>
+        <p className="mt-2 text-center text-sm text-gray-600">
+          Enter your credentials to access the dashboard
+        </p>
+      </div>
 
-        <div className="bg-white py-8 px-4 shadow-md sm:rounded-lg sm:px-10">
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-4 shadow-xl sm:rounded-xl sm:px-10 border border-gray-100">
           {error && (
-            <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <div className="mb-6 rounded-lg bg-red-50 p-4 text-sm text-red-700">
+              <div className="flex items-center">
+                <div className="mr-2 flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
+                <p>{error}</p>
               </div>
             </div>
           )}
@@ -66,7 +76,10 @@ export default function AdminLogin() {
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
-              <div className="mt-1">
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   id="email"
                   name="email"
@@ -75,8 +88,8 @@ export default function AdminLogin() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="admin@example.com"
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  placeholder="admin@ssholdings.com"
                 />
               </div>
             </div>
@@ -85,7 +98,10 @@ export default function AdminLogin() {
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
-              <div className="mt-1">
+              <div className="mt-1 relative rounded-md shadow-sm">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
                 <input
                   id="password"
                   name="password"
@@ -94,7 +110,7 @@ export default function AdminLogin() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="appearance-none block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                   placeholder="password"
                 />
               </div>
@@ -104,35 +120,47 @@ export default function AdminLogin() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
               >
-                {isLoading ? "Signing in..." : "Sign in"}
+                {isLoading ? (
+                  <span className="flex items-center">
+                    <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+                    Signing in...
+                  </span>
+                ) : (
+                  "Sign in"
+                )}
               </button>
             </div>
           </form>
 
-          <div className="mt-6">
+          <div className="mt-8">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300"></div>
+                <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500">
-                  Demo access
+                  Demo credentials
                 </span>
               </div>
             </div>
 
             <div className="mt-4">
-              <p className="text-center text-xs text-gray-600">
-                Use <span className="font-semibold">admin@example.com</span> / <span className="font-semibold">password</span> to login
-              </p>
+              <div className="rounded-lg bg-gray-50 p-4">
+                <div className="text-sm text-center text-gray-700">
+                  <p className="font-medium mb-1">Use these credentials to login:</p>
+                  <p>Email: <span className="font-semibold text-indigo-700">admin@ssholdings.com</span></p>
+                  <p>Password: <span className="font-semibold text-indigo-700">admin123</span></p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
         
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+          <Link href="/" className="inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
+            <ArrowLeft className="mr-1 h-4 w-4" />
             Return to main site
           </Link>
         </div>

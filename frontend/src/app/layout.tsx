@@ -1,8 +1,8 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
+import './globals.css'
+import type { Metadata } from 'next'
+import { Inter } from 'next/font/google'
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
   title: {
@@ -10,7 +10,18 @@ export const metadata: Metadata = {
     default: 'SS Holdings - Premium Car Export Worldwide'
   },
   description: 'SS Holdings specializes in exporting high-quality vehicles to customers worldwide.',
-};
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+}
 
 // This is a minimal root layout that doesn't include Header or Footer
 // The actual site layout is in (main)/layout.tsx
@@ -26,5 +37,5 @@ export default function RootLayout({
         {children}
       </body>
     </html>
-  );
+  )
 }

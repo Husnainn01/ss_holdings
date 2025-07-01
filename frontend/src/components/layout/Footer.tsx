@@ -12,7 +12,8 @@ import {
   Phone, 
   Mail, 
   ArrowUp,
-  Send
+  Send,
+  Youtube
 } from 'lucide-react';
 
 export default function Footer() {
@@ -106,9 +107,12 @@ export default function Footer() {
             <ul className="space-y-3">
               <li><Link href="/" className="text-gray-400 hover:text-white transition-colors">Home</Link></li>
               <li><Link href="/cars" className="text-gray-400 hover:text-white transition-colors">Our Cars</Link></li>
+              <li><Link href="/auction" className="text-gray-400 hover:text-white transition-colors">Auction</Link></li>
               <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
+              <li><Link href="/banking" className="text-gray-400 hover:text-white transition-colors">Banking Info</Link></li>
               <li><Link href="/faq" className="text-gray-400 hover:text-white transition-colors">FAQ</Link></li>
               <li><Link href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</Link></li>
+              <li><Link href="/sitemap" className="text-gray-400 hover:text-white transition-colors">Site Map</Link></li>
             </ul>
           </div>
           
@@ -193,6 +197,7 @@ export default function Footer() {
             <Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</Link>
             <Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</Link>
             <Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Shipping Policy</Link>
+            <Link href="/sitemap" className="text-gray-400 hover:text-white text-sm transition-colors">Site Map</Link>
           </div>
         </div>
         
