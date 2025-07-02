@@ -22,9 +22,9 @@ interface Config {
 }
 
 const config: Config = {
-  // Server configuration
-  port: process.env.PORT || 5001,
-  nodeEnv: process.env.NODE_ENV || 'development',
+  // Server configuration - Railway uses PORT 8080
+  port: process.env.PORT || 8080,
+  nodeEnv: process.env.NODE_ENV || 'production',
   
   // MongoDB configuration
   mongoUri: process.env.MONGODB_URI || 'mongodb+srv://ssholdings:D3MIteSgAONU5vk0@ssholdings.9aizwu5.mongodb.net/ssholdings?retryWrites=true&w=majority&ssl=true',
@@ -33,8 +33,12 @@ const config: Config = {
   jwtSecret: process.env.JWT_SECRET || 'default_secret_change_this_in_production',
   jwtExpiration: process.env.JWT_EXPIRATION || '1d',
   
-  // CORS configuration
-  corsOrigin: process.env.CORS_ORIGIN || ['http://localhost:3000', 'http://localhost:3001'],
+  // CORS configuration - handle both string and array
+  corsOrigin: process.env.CORS_ORIGIN 
+    ? (process.env.CORS_ORIGIN.includes(',') 
+        ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+        : process.env.CORS_ORIGIN)
+    : ['http://localhost:3000', 'http://localhost:3001', 'https://www.ss.holdings'],
   
   // Cloudflare configuration (for image storage)
   cloudflare: {

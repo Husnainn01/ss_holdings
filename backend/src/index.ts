@@ -22,13 +22,20 @@ const PORT = config.port;
 // Middleware
 app.use(helmet()); // Security headers
 
-// Configure CORS to accept requests from both port 3000 and 3001
+// Configure CORS using config values
 app.use(cors({
   origin: function(origin, callback) {
-    const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001'];
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+    const allowedOrigins = Array.isArray(config.corsOrigin) 
+      ? config.corsOrigin 
+      : [config.corsOrigin];
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.log(`CORS blocked origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
