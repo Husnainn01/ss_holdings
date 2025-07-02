@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { AlertCircle, Trash } from 'lucide-react';
@@ -13,8 +13,17 @@ interface DraggableImageListProps {
   title?: string;
 }
 
+interface SortableImageProps {
+  image: { id: string; url: string; isMain?: boolean };
+  index: number;
+  failed: boolean;
+  onRemove?: (index: number) => void;
+  onSetMain?: (index: number) => void;
+  isMain?: boolean;
+}
+
 // SortableImage component using @dnd-kit
-function SortableImage({ image, index, failed, onRemove, onSetMain, isMain }: any) {
+function SortableImage({ image, index, failed, onRemove, onSetMain, isMain }: SortableImageProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: image.id });
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -39,7 +48,7 @@ function SortableImage({ image, index, failed, onRemove, onSetMain, isMain }: an
       ) : (
         <img
           src={updateImageUrl(image.url)}
-          alt={`Image ${index}`}
+          alt={`Vehicle image ${index + 1}`}
           className="h-32 w-full object-cover"
           onError={() => onRemove && onRemove(index)}
         />
@@ -87,14 +96,11 @@ const DraggableImageList: React.FC<DraggableImageListProps> = ({
   onSetMain,
   title = 'Images',
 }) => {
-  // Track images that failed to load
-  const [failedImages, setFailedImages] = useState<Record<string, boolean>>({});
-
   // Setup sensors for pointer events
   const sensors = useSensors(useSensor(PointerSensor));
 
   // Handle drag end event
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIndex = images.findIndex((img) => img.id === active.id);
@@ -108,10 +114,6 @@ const DraggableImageList: React.FC<DraggableImageListProps> = ({
     } else {
       onReorder(reorderedImages);
     }
-  };
-
-  const handleImageError = (id: string) => {
-    setFailedImages((prev) => ({ ...prev, [id]: true }));
   };
 
   return (
@@ -128,7 +130,7 @@ const DraggableImageList: React.FC<DraggableImageListProps> = ({
                   key={image.id}
                   image={image}
                   index={index}
-                  failed={failedImages[image.id]}
+                  failed={false}
                   onRemove={(i: number) => {
                     if (onRemove) onRemove(i);
                   }}
