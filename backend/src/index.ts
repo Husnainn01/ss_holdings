@@ -111,6 +111,24 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/options', optionsRoutes);
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'SS Holdings API Server',
+    version: '1.0.0',
+    status: 'running',
+    endpoints: {
+      health: '/health',
+      vehicles: '/api/vehicles',
+      auth: '/api/auth',
+      uploads: '/api/uploads',
+      admin: '/api/admin',
+      roles: '/api/roles',
+      options: '/api/options'
+    }
+  });
+});
+
 // Health check route
 app.get('/health', (req, res) => {
   const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
