@@ -162,7 +162,7 @@ export default async function HomePage() {
         <div className="w-full flex flex-col md:flex-row">
           {/* Left Sidebar - Shop By Make */}
           <div className="md:w-[280px] flex-shrink-0 md:sticky md:top-[73px] p-4">
-            <BrandsSidebar brands={[]} />
+            <BrandsSidebar initialBrands={[]} />
           </div>
           
           {/* Main Content */}
@@ -195,7 +195,7 @@ export default async function HomePage() {
         <WhyChooseUs features={features} />
         
         {/* Brands Section */}
-        <BrandsSection brands={[]} />
+        <BrandsSection initialBrands={[]} />
         
         {/* FAQ Section */}
         <FAQSection faqs={faqs} />
