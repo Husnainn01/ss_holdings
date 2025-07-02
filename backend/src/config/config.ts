@@ -3,7 +3,25 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-const config = {
+interface Config {
+  port: number | string;
+  nodeEnv: string;
+  mongoUri: string;
+  jwtSecret: string;
+  jwtExpiration: string;
+  corsOrigin: string | string[];
+  cloudflare: {
+    accountId: string;
+    apiToken: string;
+    imagesEndpoint: string;
+  };
+  cdn: {
+    url: string;
+    uploadsPath: string;
+  };
+}
+
+const config: Config = {
   // Server configuration
   port: process.env.PORT || 5001,
   nodeEnv: process.env.NODE_ENV || 'development',
