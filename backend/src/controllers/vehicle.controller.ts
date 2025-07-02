@@ -5,6 +5,10 @@ import Vehicle, { IVehicle } from '../models/vehicle.model';
 // Get all vehicles with filtering, pagination, and sorting
 export const getVehicles = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('=== DEBUG: getVehicles called ===');
+    console.log('Database connection state:', require('mongoose').connection.readyState);
+    console.log('Database name:', require('mongoose').connection.name);
+    
     const { 
       page = 1, 
       limit = 10, 
@@ -69,10 +73,18 @@ export const getVehicles = async (req: Request, res: Response): Promise<void> =>
     if (fuelType) filter.fuelType = fuelType;
     if (vehicleTransmission) filter.vehicleTransmission = vehicleTransmission;
 
+    console.log('Filter applied:', JSON.stringify(filter));
+
     // Calculate pagination
     const pageNum = Number(page);
     const limitNum = Number(limit);
     const skip = (pageNum - 1) * limitNum;
+
+    console.log('Pagination:', { pageNum, limitNum, skip });
+
+    // First, let's check if any vehicles exist at all
+    const totalVehicles = await Vehicle.countDocuments({});
+    console.log('Total vehicles in database:', totalVehicles);
 
     // Execute query with pagination
     const vehicles = await Vehicle.find(filter)
@@ -80,8 +92,14 @@ export const getVehicles = async (req: Request, res: Response): Promise<void> =>
       .skip(skip)
       .limit(limitNum);
 
+    console.log('Vehicles found with filter:', vehicles.length);
+
     // Get total count for pagination
     const total = await Vehicle.countDocuments(filter);
+
+    console.log('=== DEBUG: Response data ===');
+    console.log('Total matching filter:', total);
+    console.log('Vehicles returned:', vehicles.length);
 
     res.status(200).json({
       vehicles,

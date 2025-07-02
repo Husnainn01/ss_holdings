@@ -64,31 +64,55 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 // Login user
 export const login = async (req: Request, res: Response): Promise<void> => {
   try {
+    console.log('=== DEBUG: Login attempt ===');
+    console.log('Database connection state:', require('mongoose').connection.readyState);
+    console.log('Database name:', require('mongoose').connection.name);
+    
     // Check for validation errors
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       res.status(400).json({ errors: errors.array() });
       return;
     }
 
     const { email, password } = req.body;
+    console.log('Login attempt for email:', email);
+
+    // First, let's check if any users exist at all
+    const totalUsers = await User.countDocuments({});
+    console.log('Total users in database:', totalUsers);
 
     // Find user by email
     const user = await User.findOne({ email });
+    console.log('User found:', user ? 'Yes' : 'No');
+    
     if (!user) {
+      console.log('User not found for email:', email);
       res.status(401).json({ message: 'Invalid credentials' });
       return;
     }
 
+    console.log('User details:', { 
+      id: user._id, 
+      email: user.email, 
+      role: user.role, 
+      isActive: user.isActive 
+    });
+
     // Check if user is active
     if (!user.isActive) {
+      console.log('User account is deactivated');
       res.status(401).json({ message: 'Account is deactivated' });
       return;
     }
 
     // Check password
     const isMatch = await user.comparePassword(password);
+    console.log('Password match:', isMatch);
+    
     if (!isMatch) {
+      console.log('Password does not match');
       res.status(401).json({ message: 'Invalid credentials' });
       return;
     }
@@ -99,6 +123,9 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     // Generate token
     const token = generateToken(user._id.toString());
+    console.log('Token generated successfully');
+
+    console.log('=== DEBUG: Login successful ===');
 
     // Return user data (excluding password)
     res.status(200).json({
