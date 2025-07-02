@@ -8,6 +8,7 @@ const nextConfig = {
       '136.0.157.42',
       'ss.holdings',
       'www.ss.holdings',
+      'ssholdings-production.up.railway.app',
       'placehold.co',
       'via.placeholder.com'
     ],
@@ -35,6 +36,11 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'ss.holdings',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'ssholdings-production.up.railway.app',
         pathname: '/**',
       },
       {

@@ -8,8 +8,8 @@ import config from '../config/config';
 const generateToken = (userId: string): string => {
   return jwt.sign(
     { id: userId },
-    config.jwtSecret,
-    { expiresIn: config.jwtExpiration }
+    config.jwtSecret as string,
+    { expiresIn: config.jwtExpiration as string }
   );
 };
 
