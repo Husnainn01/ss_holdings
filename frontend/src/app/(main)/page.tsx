@@ -1,3 +1,5 @@
+'use client';
+
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import HeroSection from '@/components/home/HeroSection';
@@ -10,19 +12,16 @@ import CTASection from '@/components/home/CTASection';
 import BrandsSection from '@/components/home/BrandsSection';
 import SidebarShipping from '@/components/home/SidebarShipping';
 import FeaturedCars from '@/components/home/FeaturedCars';
+import { useEffect, useState } from 'react';
 
-// This is a server component, so we can fetch data directly
+// Client-side data fetching function
 async function getVehicles() {
   try {
     // Fetch recently added vehicles
-    const recentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/vehicles?limit=8&sort=-createdAt`, { 
-      cache: 'no-store' // Don't cache this request
-    });
+    const recentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/vehicles?limit=8&sort=-createdAt`);
     
     // Fetch featured vehicles
-    const featuredResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/vehicles?isFeatured=true&limit=4`, { 
-      cache: 'no-store' // Don't cache this request
-    });
+    const featuredResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/vehicles?isFeatured=true&limit=4`);
     
     if (!recentResponse.ok || !featuredResponse.ok) {
       console.error('Error fetching vehicles:', 
@@ -80,7 +79,22 @@ async function getVehicles() {
   }
 }
 
-export default async function HomePage() {
+export default function HomePage() {
+  const [recentCars, setRecentCars] = useState<any[]>([]);
+  const [featuredCars, setFeaturedCars] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { recentCars: recent, featuredCars: featured } = await getVehicles();
+      setRecentCars(recent);
+      setFeaturedCars(featured);
+      setIsLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
   // Hero buttons
   const heroButtons = [
     {
@@ -95,9 +109,6 @@ export default async function HomePage() {
     }
   ];
 
-  // Fetch real vehicle data
-  const { recentCars, featuredCars } = await getVehicles();
-   
   // Features for "Why Choose Us" section
   const features = [
     {
@@ -168,7 +179,7 @@ export default async function HomePage() {
       <div className="w-full flex flex-col md:flex-row">
         {/* Left Sidebar - Shop By Make */}
         <div className="md:w-[280px] flex-shrink-0 md:sticky md:top-[73px] p-4">
-          <BrandsSidebar />
+          <BrandsSidebar initialBrands={[]} />
         </div>
         
         {/* Main Content */}
@@ -201,7 +212,7 @@ export default async function HomePage() {
       <WhyChooseUs features={features} />
       
       {/* Brands Section */}
-      <BrandsSection />
+      <BrandsSection initialBrands={[]} />
       
       {/* FAQ Section */}
       <FAQSection faqs={faqs} />
