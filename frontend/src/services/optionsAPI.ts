@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ssholdings-production.up.railway.app/api';
 
 // Define Option interface
 export interface Option {

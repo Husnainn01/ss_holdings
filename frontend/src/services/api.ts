@@ -2,7 +2,7 @@ import axios, { InternalAxiosRequestConfig } from 'axios';
 
 // Create axios instance with base URL and default headers
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://ssholdings-production.up.railway.app/api',
   headers: {
     'Content-Type': 'application/json',
   },
