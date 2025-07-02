@@ -1,16 +1,16 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import User from '../models/user.model';
 import { validationResult } from 'express-validator';
 import config from '../config/config';
 
 // Generate JWT token
 const generateToken = (userId: string): string => {
-  return jwt.sign(
-    { id: userId },
-    config.jwtSecret,
-    { expiresIn: config.jwtExpiration }
-  );
+  const payload = { id: userId };
+  const secret: string = config.jwtSecret;
+  const options: SignOptions = { expiresIn: config.jwtExpiration };
+  
+  return jwt.sign(payload, secret, options);
 };
 
 // Register a new user
