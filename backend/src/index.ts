@@ -57,7 +57,8 @@ const mongoUri = config.mongoUri;
 const connectDB = async () => {
   try {
     console.log('Connecting to MongoDB...');
-    console.log(`Using database: ${mongoUri.replace(/\/\/.*@/, '//***:***@')}`); // Hide credentials in logs
+    console.log(`MongoDB URI from config: ${mongoUri.replace(/\/\/.*@/, '//***:***@')}`); // Hide credentials in logs
+    console.log(`Environment MONGODB_URI exists: ${process.env.MONGODB_URI ? 'Yes' : 'No'}`);
     
     await mongoose.connect(mongoUri, {
       // MongoDB connection options for Railway deployment
@@ -74,6 +75,7 @@ const connectDB = async () => {
       sslValidate: true,
     });
     console.log('MongoDB connected successfully');
+    console.log(`Connected to database: ${mongoose.connection.name}`);
     
     // Initialize database with roles if needed
     await initializeDatabase();
