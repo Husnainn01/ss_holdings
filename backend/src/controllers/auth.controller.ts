@@ -1,14 +1,14 @@
 import { Request, Response } from 'express';
-import jwt, { SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import User from '../models/user.model';
 import { validationResult } from 'express-validator';
 import config from '../config/config';
 
 // Generate JWT token
 const generateToken = (userId: string): string => {
-  const payload = { id: userId };
-  const secret = config.jwtSecret;
-  const options = { expiresIn: config.jwtExpiration };
+  const payload: object = { id: userId };
+  const secret: string = config.jwtSecret;
+  const options: jwt.SignOptions = { expiresIn: config.jwtExpiration };
   
   return jwt.sign(payload, secret, options);
 };
