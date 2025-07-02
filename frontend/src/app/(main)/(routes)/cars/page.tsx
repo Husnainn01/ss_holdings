@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, ReactNode, useEffect } from 'react';
+import React, { useState, ReactNode, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
@@ -119,7 +119,8 @@ const FilterCheckbox = ({ id, label, count, checked, onChange }: FilterCheckboxP
   );
 };
 
-export default function CarsPage() {
+// Create a separate component that uses useSearchParams
+function CarsPageContent() {
   // State for filters
   const [selectedMakes, setSelectedMakes] = useState<string[]>([]);
   const [selectedBodyTypes, setSelectedBodyTypes] = useState<string[]>([]);
@@ -916,5 +917,13 @@ export default function CarsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function CarsPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CarsPageContent />
+    </Suspense>
   );
 } 
