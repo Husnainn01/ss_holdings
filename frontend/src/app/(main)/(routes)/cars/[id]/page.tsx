@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -24,21 +24,15 @@ import { vehicleAPI } from '@/services/api';
 import { IVehicle, IVehicleImage } from '@/types/vehicle';
 import { updateImageUrl } from '@/lib/utils';
 
-interface CarDetailPageProps {
-  params: {
-    id: string;
-  }
-}
-
 // Check if a string is a valid MongoDB ObjectId
 function isValidObjectId(id: string): boolean {
   return /^[0-9a-fA-F]{24}$/.test(id);
 }
 
-export default function CarDetailPage({ params }: CarDetailPageProps) {
-  // Use React.use() to unwrap params properly typed
-  const resolvedParams = React.use(params as any) as { id: string };
-  const { id } = resolvedParams;
+export default function CarDetailPage() {
+  // Use useParams hook to get the id parameter in Client Component
+  const params = useParams();
+  const id = params.id as string;
   
   // State hooks
   const [car, setCar] = useState<IVehicle | null>(null);
@@ -99,7 +93,9 @@ export default function CarDetailPage({ params }: CarDetailPageProps) {
       }
     };
 
-    fetchCarData();
+    if (id) {
+      fetchCarData();
+    }
   }, [id]);
   
   // Effect to set default message when car data changes
