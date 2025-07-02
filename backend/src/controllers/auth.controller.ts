@@ -1,15 +1,16 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 import User from '../models/user.model';
 import { validationResult } from 'express-validator';
 import config from '../config/config';
+
+const jwt = require('jsonwebtoken');
 
 // Generate JWT token
 const generateToken = (userId: string): string => {
   return jwt.sign(
     { id: userId },
     config.jwtSecret,
-    { expiresIn: config.jwtExpiration as string | number }
+    { expiresIn: config.jwtExpiration }
   );
 };
 
