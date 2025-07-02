@@ -1,3 +1,7 @@
+// NOTE: This file is no longer needed with @dnd-kit, but is kept for compatibility.
+// The old code using react-beautiful-dnd is commented out below.
+
+/*
 import React, { useEffect, useState } from 'react';
 import { DragDropContext, Droppable, DroppableProps } from 'react-beautiful-dnd';
 
@@ -29,4 +33,9 @@ export const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
   return <Droppable {...safeProps}>{children}</Droppable>;
 };
 
+export default StrictModeDroppable;
+*/
+
+// Dummy passthrough for compatibility with new @dnd-kit usage
+const StrictModeDroppable = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 export default StrictModeDroppable; 
