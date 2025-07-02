@@ -6,11 +6,11 @@ import config from '../config/config';
 
 // Generate JWT token
 const generateToken = (userId: string): string => {
-  const payload: object = { id: userId };
-  const secret: string = config.jwtSecret;
-  const options: jwt.SignOptions = { expiresIn: config.jwtExpiration };
-  
-  return jwt.sign(payload, secret, options);
+  return jwt.sign(
+    { id: userId },
+    config.jwtSecret,
+    { expiresIn: config.jwtExpiration as string | number }
+  );
 };
 
 // Register a new user
