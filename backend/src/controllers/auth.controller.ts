@@ -7,8 +7,8 @@ import config from '../config/config';
 // Generate JWT token
 const generateToken = (userId: string): string => {
   const payload = { id: userId };
-  const secret: string = config.jwtSecret;
-  const options: SignOptions = { expiresIn: config.jwtExpiration };
+  const secret = config.jwtSecret;
+  const options = { expiresIn: config.jwtExpiration };
   
   return jwt.sign(payload, secret, options);
 };
