@@ -43,21 +43,28 @@ app.use(morgan('dev')); // Logging
 // However, we'll keep this as a fallback for local file storage
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Use the correct MongoDB URI
-const mongoUri = 'mongodb+srv://ssholdings:D3MIteSgAONU5vk0@ssholdings.9aizwu5.mongodb.net/ssholdings';
+// Use the MongoDB URI from config
+const mongoUri = config.mongoUri;
 
 // Connect to MongoDB
 const connectDB = async () => {
   try {
     console.log('Connecting to MongoDB...');
-    console.log(`Using database: ${mongoUri}`);
+    console.log(`Using database: ${mongoUri.replace(/\/\/.*@/, '//***:***@')}`); // Hide credentials in logs
     
     await mongoose.connect(mongoUri, {
-      // MongoDB connection options
+      // MongoDB connection options for Railway deployment
       retryWrites: true,
       w: 'majority',
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+      serverSelectionTimeoutMS: 10000, // Increased timeout for Railway
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 10000,
+      maxPoolSize: 10,
+      minPoolSize: 1,
+      maxIdleTimeMS: 30000,
+      // SSL options for Railway
+      ssl: true,
+      sslValidate: true,
     });
     console.log('MongoDB connected successfully');
     
@@ -65,11 +72,10 @@ const connectDB = async () => {
     await initializeDatabase();
   } catch (error) {
     console.error('MongoDB connection error:', error);
-    console.log('MongoDB URI:', mongoUri);
-    console.log('Retrying connection in 5 seconds...');
+    console.log('Retrying connection in 10 seconds...');
     
-    // Wait 5 seconds and try again
-    setTimeout(connectDB, 5000);
+    // Wait 10 seconds and try again (increased for Railway)
+    setTimeout(connectDB, 10000);
   }
 };
 

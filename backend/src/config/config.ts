@@ -27,7 +27,7 @@ const config: Config = {
   nodeEnv: process.env.NODE_ENV || 'development',
   
   // MongoDB configuration
-  mongoUri: process.env.MONGODB_URI || 'mongodb+srv://ssholdings:D3MIteSgAONU5vk0@ssholdings.9aizwu5.mongodb.net/ssholdings',
+  mongoUri: process.env.MONGODB_URI || 'mongodb+srv://ssholdings:D3MIteSgAONU5vk0@ssholdings.9aizwu5.mongodb.net/ssholdings?retryWrites=true&w=majority&ssl=true',
   
   // JWT configuration
   jwtSecret: process.env.JWT_SECRET || 'default_secret_change_this_in_production',
