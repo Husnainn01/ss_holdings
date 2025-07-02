@@ -7,6 +7,7 @@ const nextConfig = {
       'cdn.ss.holdings',
       '136.0.157.42',
       'ss.holdings',
+      'www.ss.holdings',
       'placehold.co',
       'via.placeholder.com'
     ],
@@ -24,6 +25,11 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: '136.0.157.42',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.ss.holdings',
         pathname: '/**',
       },
       {
