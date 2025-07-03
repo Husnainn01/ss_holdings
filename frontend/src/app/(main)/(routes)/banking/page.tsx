@@ -1,18 +1,27 @@
-import React from 'react';
-import { Shield, CreditCard, Building, Globe, ArrowRight } from 'lucide-react';
+"use client";
+
+import React, { useState } from 'react';
+import { Shield, CreditCard, Building, Globe, ArrowRight, Eye, EyeOff, Lock } from 'lucide-react';
 import Link from 'next/link';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 export default function BankingPage() {
+  const [verifiedAccountId, setVerifiedAccountId] = useState<number | null>(null);
+  const [showVerification, setShowVerification] = useState<number | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+
   // Banking information
   const bankAccounts = [
     {
-      bankName: "International Bank of Commerce",
-      accountName: "SS Holdings Ltd.",
-      accountNumber: "XXXX-XXXX-XXXX-1234",
-      swiftCode: "IBCXXXX",
-      routingNumber: "123456789",
-      branchAddress: "123 Finance Street, New York, NY 10001, USA",
-      currency: "USD"
+      bankName: "MITSUBISHI TOKYO UFJ BANK",
+      swiftCode: "BOTKJPJT",
+      branchName: "YANAGIBASHI BRANCH	",
+      country: "JAPAN",
+      accountName: "SS HOLDINGS",
+      accountNumber: "0268370",
+      branchAddress: "AICHI KEN YATOMI SHI HIGASHISUEHIRO 5 CHOME 41",
+      currency: "JPY",
+      status: "active"
     },
     {
       bankName: "Tokyo Financial Group",
@@ -21,7 +30,8 @@ export default function BankingPage() {
       swiftCode: "TFGXXXX",
       routingNumber: "987654321",
       branchAddress: "456 Banking Avenue, Tokyo, Japan",
-      currency: "JPY"
+      currency: "JPY",
+      status: "coming_soon"
     },
     {
       bankName: "Emirates International Bank",
@@ -30,9 +40,26 @@ export default function BankingPage() {
       swiftCode: "EIBXXXX",
       routingNumber: "456789123",
       branchAddress: "789 Finance Tower, Dubai, UAE",
-      currency: "AED"
+      currency: "AED",
+      status: "coming_soon"
     }
   ];
+
+  const handleVerifyClick = (index: number) => {
+    setShowVerification(index);
+  };
+
+  const handleTurnstileSuccess = async (token: string) => {
+    setTurnstileToken(token);
+    // In production, you would verify this token with your backend
+    // For now, we'll just show the account number
+    setVerifiedAccountId(showVerification);
+    setShowVerification(null);
+  };
+
+  const maskAccountNumber = (accountNumber: string) => {
+    return accountNumber.replace(/\d(?=\d{4})/g, "X");
+  };
 
   return (
     <div className="bg-white min-h-screen">
@@ -70,39 +97,87 @@ export default function BankingPage() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {bankAccounts.map((account, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div key={index} className={`border border-gray-200 rounded-lg overflow-hidden shadow-sm transition-shadow ${account.status === 'active' ? 'hover:shadow-md' : 'opacity-75'}`}>
               <div className="bg-gray-50 p-4 border-b border-gray-200">
                 <div className="flex justify-between items-center">
                   <h3 className="font-bold text-lg">{account.bankName}</h3>
-                  <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">
-                    {account.currency}
-                  </span>
+                  {account.status === 'active' ? (
+                    <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-medium">
+                      {account.currency}
+                    </span>
+                  ) : (
+                    <span className="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full font-medium">
+                      Coming Soon
+                    </span>
+                  )}
                 </div>
                 <p className="text-gray-600 text-sm mt-1">{account.accountName}</p>
               </div>
               
-              <div className="p-4">
-                <table className="w-full text-sm">
-                  <tbody>
-                    <tr>
-                      <td className="py-2 text-gray-500 font-medium">Account Number:</td>
-                      <td className="py-2 text-gray-900 font-mono">{account.accountNumber}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 text-gray-500 font-medium">SWIFT Code:</td>
-                      <td className="py-2 text-gray-900 font-mono">{account.swiftCode}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 text-gray-500 font-medium">Routing Number:</td>
-                      <td className="py-2 text-gray-900 font-mono">{account.routingNumber}</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 text-gray-500 font-medium">Branch Address:</td>
-                      <td className="py-2 text-gray-900">{account.branchAddress}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              {account.status === 'active' ? (
+                <div className="p-4">
+                  <table className="w-full text-sm">
+                    <tbody>
+                      <tr>
+                        <td className="py-2 text-gray-500 font-medium">Account Number:</td>
+                        <td className="py-2 text-gray-900 font-mono flex justify-between items-center">
+                          {verifiedAccountId === index ? account.accountNumber : maskAccountNumber(account.accountNumber)}
+                          {!showVerification && (
+                            <button
+                              onClick={() => handleVerifyClick(index)}
+                              className="ml-2 text-blue-600 hover:text-blue-800 flex items-center text-xs"
+                            >
+                              {verifiedAccountId === index ? (
+                                <EyeOff className="h-4 w-4" />
+                              ) : (
+                                <>
+                                  <Eye className="h-4 w-4 mr-1" />
+                                  Reveal
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 text-gray-500 font-medium">SWIFT Code:</td>
+                        <td className="py-2 text-gray-900 font-mono">{account.swiftCode}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 text-gray-500 font-medium">Branch Name:</td>
+                        <td className="py-2 text-gray-900 font-mono">{account.branchName}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 text-gray-500 font-medium">Branch Address:</td>
+                        <td className="py-2 text-gray-900">{account.branchAddress}</td>
+                      </tr>
+                      <tr>
+                        <td className="py-2 text-gray-500 font-medium">Country:</td>
+                        <td className="py-2 text-gray-900 font-mono">{account.country}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                  {showVerification === index && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <div className="flex items-center mb-3">
+                        <Lock className="h-4 w-4 text-gray-500 mr-2" />
+                        <p className="text-sm text-gray-600">Please verify that you are human</p>
+                      </div>
+                      <Turnstile
+                        siteKey="YOUR_SITE_KEY" // Replace with your Cloudflare Turnstile site key
+                        onSuccess={handleTurnstileSuccess}
+                      />
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-4">
+                  <p className="text-gray-500 text-sm">
+                    This banking option will be available soon. Please use our active banking details for now.
+                  </p>
+                </div>
+              )}
             </div>
           ))}
         </div>

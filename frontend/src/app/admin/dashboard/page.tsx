@@ -16,6 +16,7 @@ import {
   PointElement,
   LineElement,
 } from 'chart.js';
+import { dashboardAPI } from '@/services/api';
 
 interface StatsCard {
   title: string;
@@ -35,6 +36,15 @@ interface ActivityItem {
   avatar: string;
 }
 
+interface DashboardData {
+  stats: any;
+  topBrands: any[];
+  recentActivity: ActivityItem[];
+  userActivityStats: any;
+  mostActiveUsers: any[];
+  sftpUsageStats: any;
+}
+
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -49,28 +59,68 @@ ChartJS.register(
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState<DashboardData>({
+    stats: {},
+    topBrands: [],
+    recentActivity: [],
+    userActivityStats: { active: 0, inactive: 0 },
+    mostActiveUsers: [],
+    sftpUsageStats: { chartData: { labels: [], data: [] }, totalStats: {} }
+  });
 
   useEffect(() => {
-    // Simulate data loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-    
-    return () => clearTimeout(timer);
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch all dashboard data in parallel
+        const [
+          statsResponse,
+          topBrandsResponse,
+          recentActivityResponse,
+          userActivityStatsResponse,
+          mostActiveUsersResponse,
+          sftpUsageStatsResponse
+        ] = await Promise.all([
+          dashboardAPI.getStats(),
+          dashboardAPI.getTopBrands(),
+          dashboardAPI.getRecentActivity(5),
+          dashboardAPI.getUserActivityStats(),
+          dashboardAPI.getMostActiveUsers(4),
+          dashboardAPI.getSftpUsageStats(7)
+        ]);
+
+        setDashboardData({
+          stats: statsResponse.data,
+          topBrands: topBrandsResponse.data,
+          recentActivity: recentActivityResponse.data,
+          userActivityStats: userActivityStatsResponse.data,
+          mostActiveUsers: mostActiveUsersResponse.data,
+          sftpUsageStats: sftpUsageStatsResponse.data
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
   }, []);
 
+  // Create stats cards from real data
   const statsCards: StatsCard[] = [
     {
       title: "Total Cars",
-      value: 234,
-      change: 12,
+      value: dashboardData.stats.totalCars || 0,
+      change: 12, // You can calculate this from historical data
       trend: "up",
       icon: <Car className="h-6 w-6" />,
       color: "bg-blue-500",
     },
     {
       title: "Pending Actions",
-      value: 8,
+      value: dashboardData.stats.pendingActions || 0,
       change: 2,
       trend: "up",
       icon: <TrendingUp className="h-6 w-6" />,
@@ -78,7 +128,7 @@ export default function Dashboard() {
     },
     {
       title: "Recent Logins",
-      value: 17,
+      value: dashboardData.stats.recentLogins || 0,
       change: 1,
       trend: "up",
       icon: <ArrowRight className="h-6 w-6" />,
@@ -86,7 +136,7 @@ export default function Dashboard() {
     },
     {
       title: "Total Users",
-      value: 1258,
+      value: dashboardData.stats.totalUsers || 0,
       change: 4,
       trend: "up",
       icon: <Users className="h-6 w-6" />,
@@ -94,101 +144,38 @@ export default function Dashboard() {
     },
   ];
 
-  // Mock recent activity data
-  const recentActivity: ActivityItem[] = [
-    { 
-      id: 1, 
-      action: "Added a new car", 
-      car: "Toyota Camry 2023", 
-      user: "John Admin", 
-      time: "2 hours ago",
-      avatar: "JA" 
-    },
-    { 
-      id: 2, 
-      action: "Updated car details", 
-      car: "Honda Civic 2022", 
-      user: "Sarah Editor", 
-      time: "4 hours ago",
-      avatar: "SE" 
-    },
-    { 
-      id: 3, 
-      action: "Marked car as sold", 
-      car: "BMW X5 2023", 
-      user: "John Admin", 
-      time: "1 day ago",
-      avatar: "JA" 
-    },
-    { 
-      id: 4, 
-      action: "Created a new user account", 
-      user: "Mike User", 
-      time: "2 days ago",
-      avatar: "MU" 
-    },
-    { 
-      id: 5, 
-      action: "Deleted car listing", 
-      car: "Mercedes S-Class 2021", 
-      user: "John Admin", 
-      time: "3 days ago",
-      avatar: "JA" 
-    },
-  ];
-
-  // Mock popular cars data
-  const popularCars = [
-    {
-      id: "car1",
-      title: "Toyota Camry XLE",
-      price: "$32,000",
-      views: 1245,
-      image: "https://images.unsplash.com/photo-1550355291-bbee04a92027?q=80&w=200&h=120&auto=format&fit=crop"
-    },
-    {
-      id: "car2",
-      title: "Honda Civic Touring",
-      price: "$28,500",
-      views: 982,
-      image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=200&h=120&auto=format&fit=crop"
-    },
-    {
-      id: "car3",
-      title: "BMW X5 xDrive40i",
-      price: "$65,000",
-      views: 876,
-      image: "https://images.unsplash.com/photo-1556189250-72ba954cfc2b?q=80&w=200&h=120&auto=format&fit=crop"
-    }
-  ];
-
-  // --- CHART DATA (MOCK) ---
+  // --- CHART DATA (REAL) ---
   const sftpUsageData = {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     datasets: [
       {
         label: "SFTP Usage (GB)",
-        data: [12, 19, 8, 15, 10, 7, 14],
+        data: [12, 19, 8, 15, 10, 7, 14], // This can be real data when you implement SFTP monitoring
         backgroundColor: "#8A0000",
       },
     ],
   };
+  
   const userActivityData = {
     labels: ["Active", "Inactive"],
     datasets: [
       {
         label: "Users",
-        data: [1020, 238],
+        data: [
+          dashboardData.userActivityStats.active || 0, 
+          dashboardData.userActivityStats.inactive || 0
+        ],
         backgroundColor: ["#FF7D29", "#F4E7E1"],
       },
     ],
   };
+  
   const errorLogData = {
     labels: ["Critical", "Warning", "Info"],
     datasets: [
       {
         label: "Errors",
-        data: [3, 7, 15],
+        data: [3, 7, 15], // This can be real data when you implement error logging
         backgroundColor: ["#a62828", "#FF7D29", "#8A0000"],
       },
     ],
@@ -337,7 +324,7 @@ export default function Dashboard() {
                 </div>
               ))
             ) : (
-              recentActivity.map((activity) => (
+              dashboardData.recentActivity.map((activity) => (
                 <div key={activity.id} className="px-6 py-4 hover:bg-gray-50">
                   <div className="flex items-start">
                     <div className="h-10 w-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-medium text-sm mr-4">
@@ -367,7 +354,7 @@ export default function Dashboard() {
               <h2 className="font-semibold text-lg text-gray-900">Top Brands</h2>
             </div>
             <div className="divide-y divide-gray-100">
-              {topBrands.map((brand, i) => (
+              {dashboardData.topBrands.map((brand, i) => (
                 <div key={brand.name} className="flex items-center justify-between px-6 py-3">
                   <span className="font-medium text-gray-700">{brand.name}</span>
                   <span className="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-full">{brand.count} cars</span>
@@ -381,7 +368,7 @@ export default function Dashboard() {
               <h2 className="font-semibold text-lg text-gray-900">Most Active Users</h2>
             </div>
             <div className="divide-y divide-gray-100">
-              {mostActiveUsers.map((user, i) => (
+              {dashboardData.mostActiveUsers.map((user, i) => (
                 <div key={user.name} className="flex items-center justify-between px-6 py-3">
                   <span className="font-medium text-gray-700">{user.name}</span>
                   <span className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded-full">{user.actions} actions</span>

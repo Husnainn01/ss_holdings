@@ -262,11 +262,11 @@ export default function Header() {
             <div className="flex items-center space-x-6 text-sm">
               <div className="flex items-center">
                 <MapPin size={14} className="mr-1.5" />
-                <span>123 Export Ave, New York, NY 10001</span>
+                <span>Aichi Ken Nagoya Shi Minato Ku Nishifukuta 1-1506</span>
               </div>
               <div className="flex items-center">
                 <Phone size={14} className="mr-1.5" />
-                <span>+1 (555) 123-4567</span>
+                <span>+81 052 387 9772</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -310,10 +310,10 @@ export default function Header() {
             {/* Logo */}
             <Link href="/" className="flex items-center">
               <div className="bg-red-600 text-white rounded-md w-8 h-8 flex items-center justify-center mr-2">
-                <span className="font-bold">S</span>
+                <span className="font-bold">SS</span>
               </div>
               <div>
-                <span className="font-bold text-xl md:text-2xl">SS Holdings</span>
+                <span className="font-bold text-xl md:text-2xl">Holdings</span>
                 <span className="hidden md:inline-block text-xs text-gray-500 ml-2">Global Auto Exports</span>
               </div>
             </Link>

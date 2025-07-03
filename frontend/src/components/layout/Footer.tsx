@@ -63,10 +63,10 @@ export default function Footer() {
           <div className="md:col-span-4">
             <div className="flex items-start mb-6">
               <div className="bg-red-600 text-white rounded-md w-8 h-8 flex items-center justify-center mr-3">
-                <span className="font-bold">S</span>
+                <span className="font-bold">SS</span>
               </div>
               <div>
-                <h3 className="font-bold text-xl mb-1">SS Holdings</h3>
+                <h3 className="font-bold text-xl mb-1">Holdings</h3>
                 <p className="text-sm text-gray-400">Global Auto Exports</p>
               </div>
             </div>
@@ -166,7 +166,7 @@ export default function Footer() {
             <MapPin size={20} className="text-red-600 mr-3" />
             <div>
               <p className="font-medium">Our Location</p>
-              <p className="text-gray-400 text-sm">123 Export Ave, New York, NY 10001</p>
+              <p className="text-gray-400 text-sm">Aichi Ken Nagoya Shi Minato Ku Nishifukuta 1-1506</p>
             </div>
           </div>
           
@@ -174,7 +174,7 @@ export default function Footer() {
             <Phone size={20} className="text-red-600 mr-3" />
             <div>
               <p className="font-medium">Call Us 24/7</p>
-              <p className="text-gray-400 text-sm">+1 (555) 123-4567</p>
+              <p className="text-gray-400 text-sm">+81 052 387 9772</p>
             </div>
           </div>
           
@@ -182,7 +182,7 @@ export default function Footer() {
             <Mail size={20} className="text-red-600 mr-3" />
             <div>
               <p className="font-medium">Email Us</p>
-              <p className="text-gray-400 text-sm">info@ssholdings.com</p>
+              <p className="text-gray-400 text-sm">info@ss.holdings</p>
             </div>
           </div>
         </div>

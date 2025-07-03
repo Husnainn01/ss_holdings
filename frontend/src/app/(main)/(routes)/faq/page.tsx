@@ -266,7 +266,7 @@ export default function FAQPage() {
                       Contact Us
                     </Link>
                     <a 
-                      href="tel:+15551234567"
+                      href="tel:+810523879772"
                       className="flex items-center justify-center bg-secondary text-dark px-6 py-3 rounded-lg font-medium hover:bg-secondary-hover transition-colors"
                     >
                       <Phone className="h-5 w-5 mr-2" />

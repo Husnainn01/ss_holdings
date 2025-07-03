@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import mongoose from 'mongoose';
 import path from 'path';
 import config from './config/config';
-import { initializeDatabase } from './utils/initDB';
+// import { initializeDatabase } from './utils/initDB'; // DISABLED
 
 // Import routes
 import vehicleRoutes from './routes/vehicle.routes';
@@ -77,8 +77,8 @@ const connectDB = async () => {
     console.log('MongoDB connected successfully');
     console.log(`Connected to database: ${mongoose.connection.name}`);
     
-    // Initialize database with roles if needed
-    await initializeDatabase();
+    // Initialize database with roles if needed - DISABLED to prevent test database creation
+    // await initializeDatabase();
   } catch (error) {
     console.error('MongoDB connection error:', error);
     console.log('Retrying connection in 10 seconds...');

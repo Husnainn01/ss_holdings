@@ -7,9 +7,8 @@ import { ArrowLeft, Save, X, Loader2 } from "lucide-react";
 import { userAPI, roleAPI } from "@/services/api";
 
 interface Role {
-  _id: string;
   name: string;
-  description: string;
+  permissions: string[];
 }
 
 export default function NewUserPage() {
@@ -36,13 +35,29 @@ export default function NewUserPage() {
       try {
         setLoadingRoles(true);
         const response = await roleAPI.getRoles();
-        setRoles(response.data);
+        
+        // Debug: Log the roles data to see what we're getting
+        console.log("Fetched roles:", response.data);
+        
+        // Filter out any roles that don't have proper name
+        const validRoles = response.data.filter((role: Role) => role.name);
+        
+        // Check for duplicate name values
+        const uniqueRoles = validRoles.filter((role: Role, index: number, self: Role[]) => 
+          index === self.findIndex((r: Role) => r.name === role.name)
+        );
+        
+        if (uniqueRoles.length !== validRoles.length) {
+          console.warn("Duplicate roles found and removed:", validRoles.length - uniqueRoles.length);
+        }
+        
+        setRoles(uniqueRoles);
         
         // Set default role to the first available role
-        if (response.data.length > 0) {
+        if (uniqueRoles.length > 0) {
           setFormData(prev => ({
             ...prev,
-            role: response.data[0].name.toLowerCase()
+            role: uniqueRoles[0].name.toLowerCase()
           }));
         }
         
@@ -90,8 +105,8 @@ export default function NewUserPage() {
     
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
     }
     
     if (formData.password !== formData.confirmPassword) {
@@ -117,8 +132,7 @@ export default function NewUserPage() {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        role: formData.role,
-        isActive: formData.isActive
+        role: formData.role
       };
       
       await userAPI.createUser(userData);
@@ -135,12 +149,54 @@ export default function NewUserPage() {
     }
   };
 
+  const getRoleDescription = (roleName: string): string => {
+    switch (roleName.toLowerCase()) {
+      case 'admin':
+        return 'Full system access with all permissions';
+      case 'manager':
+        return 'Can manage vehicles and view users with limited settings access';
+      case 'editor':
+        return 'Can create and edit vehicles with dashboard access';
+      case 'user':
+        return 'Basic access with view-only permissions';
+      default:
+        return 'Custom role with specific permissions';
+    }
+  };
+
   if (loadingRoles) {
     return (
       <div className="p-6 flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-indigo-600" />
           <p className="mt-4 text-gray-600">Loading roles...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (roles.length === 0) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+          <div className="flex">
+            <X className="h-5 w-5 text-red-400 mr-2" />
+            <div>
+              <h3 className="text-sm font-medium text-red-800">No roles found</h3>
+              <p className="text-sm text-red-700 mt-1">
+                No roles are available. Please contact an administrator to set up user roles first.
+              </p>
+              <div className="mt-3">
+                <Link
+                  href="/admin/dashboard/users"
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  <ArrowLeft className="mr-1 h-4 w-4" />
+                  Back to Users
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -189,11 +245,12 @@ export default function NewUserPage() {
                     value={formData.name}
                     onChange={handleChange}
                     className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
-                      errors.name ? "border-red-300" : ""
+                      errors.name ? 'border-red-300' : ''
                     }`}
+                    placeholder="Enter full name"
                   />
                   {errors.name && (
-                    <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                    <p className="mt-2 text-sm text-red-600">{errors.name}</p>
                   )}
                 </div>
               </div>
@@ -210,11 +267,12 @@ export default function NewUserPage() {
                     value={formData.email}
                     onChange={handleChange}
                     className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
-                      errors.email ? "border-red-300" : ""
+                      errors.email ? 'border-red-300' : ''
                     }`}
+                    placeholder="Enter email address"
                   />
                   {errors.email && (
-                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                    <p className="mt-2 text-sm text-red-600">{errors.email}</p>
                   )}
                 </div>
               </div>
@@ -231,11 +289,12 @@ export default function NewUserPage() {
                     value={formData.password}
                     onChange={handleChange}
                     className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
-                      errors.password ? "border-red-300" : ""
+                      errors.password ? 'border-red-300' : ''
                     }`}
+                    placeholder="Enter password"
                   />
                   {errors.password && (
-                    <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                    <p className="mt-2 text-sm text-red-600">{errors.password}</p>
                   )}
                 </div>
               </div>
@@ -252,16 +311,17 @@ export default function NewUserPage() {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
-                      errors.confirmPassword ? "border-red-300" : ""
+                      errors.confirmPassword ? 'border-red-300' : ''
                     }`}
+                    placeholder="Confirm password"
                   />
                   {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
+                    <p className="mt-2 text-sm text-red-600">{errors.confirmPassword}</p>
                   )}
                 </div>
               </div>
 
-              <div className="sm:col-span-3">
+              <div className="sm:col-span-6">
                 <label htmlFor="role" className="block text-sm font-medium text-gray-700">
                   Role
                 </label>
@@ -274,45 +334,26 @@ export default function NewUserPage() {
                     className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                   >
                     {roles.map((role) => (
-                      <option key={role._id} value={role.name.toLowerCase()}>
-                        {role.name}
+                      <option key={role.name} value={role.name.toLowerCase()}>
+                        {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
                       </option>
                     ))}
                   </select>
                   <p className="mt-2 text-sm text-gray-500">
-                    {roles.find(r => r.name.toLowerCase() === formData.role.toLowerCase())?.description}
+                    {getRoleDescription(formData.role)}
                   </p>
-                </div>
-              </div>
-
-              <div className="sm:col-span-3">
-                <div className="flex items-center h-full mt-6">
-                  <div className="flex items-center">
-                    <input
-                      id="isActive"
-                      name="isActive"
-                      type="checkbox"
-                      checked={formData.isActive}
-                      onChange={handleChange}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                    />
-                    <label htmlFor="isActive" className="ml-2 block text-sm text-gray-900">
-                      Active account
-                    </label>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="px-6 py-4 bg-gray-50 flex justify-end">
-            <button
-              type="button"
-              onClick={() => router.push("/admin/dashboard/users")}
-              className="mr-3 px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+            <Link
+              href="/admin/dashboard/users"
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
               Cancel
-            </button>
+            </Link>
             <button
               type="submit"
               disabled={loading}

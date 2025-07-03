@@ -570,7 +570,7 @@ export default function AuctionPage() {
           </div>
           
           <p className="mt-8 text-gray-400">
-            Need assistance? Contact our support team at <span className="text-white">support@ssholdings.com</span>
+            Need assistance? Contact our support team at <span className="text-white">csd@ss.holdings</span>
           </p>
         </div>
       </div>

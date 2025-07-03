@@ -71,8 +71,8 @@ export default function ContactPage() {
                 </div>
                 <h2 className="text-xl font-semibold mb-3">Email Us</h2>
                 <p className="text-gray-500 mb-4">Send us an email and we'll respond within 24 hours</p>
-                <a href="mailto:info@ssholdings.com" className="text-primary font-medium hover:text-primary-hover transition-colors">
-                  info@ssholdings.com
+                <a href="mailto:cs@ss.holdings" className="text-primary font-medium hover:text-primary-hover transition-colors">
+                  cs@ss.holdings
                 </a>
               </div>
               
@@ -83,7 +83,7 @@ export default function ContactPage() {
                 <h2 className="text-xl font-semibold mb-3">Visit Us</h2>
                 <p className="text-gray-500 mb-4">Our headquarters location</p>
                 <p className="text-primary font-medium">
-                  123 Export Avenue, New York
+                  Aichi Ken Nagoya Shi Minato Ku Nishifukuta 1-1506
                 </p>
               </div>
             </div>
@@ -276,8 +276,8 @@ export default function ContactPage() {
                     </div>
                     <div className="ml-4">
                       <h3 className="text-lg font-medium">Phone</h3>
-                      <p className="text-gray-600 mt-1">+1 (555) 123-4567 (Sales)</p>
-                      <p className="text-gray-600">+1 (555) 987-6543 (Support)</p>
+                      <p className="text-gray-600 mt-1">+81 052 387 9772 (Sales)</p>
+                      <p className="text-gray-600">+81 052 387 9772 (Support)</p>
                     </div>
                   </div>
                   
@@ -289,8 +289,8 @@ export default function ContactPage() {
                     </div>
                     <div className="ml-4">
                       <h3 className="text-lg font-medium">Email</h3>
-                      <p className="text-gray-600 mt-1">info@ssholdings.com</p>
-                      <p className="text-gray-600">support@ssholdings.com</p>
+                      <p className="text-gray-600 mt-1">cs@ss.holdings</p>
+                      <p className="text-gray-600">info@ss.holdings</p>
                     </div>
                   </div>
                   
@@ -303,10 +303,8 @@ export default function ContactPage() {
                     <div className="ml-4">
                       <h3 className="text-lg font-medium">Address</h3>
                       <p className="text-gray-600 mt-1">
-                        123 Export Avenue<br />
-                        Suite 456<br />
-                        Business District<br />
-                        New York, NY 10001
+                        Aichi Ken Nagoya Shi Minato Ku Nishifukuta 1-1506<br />
+                        Nagoya, Aichi, Japan
                       </p>
                     </div>
                   </div>
@@ -356,13 +354,13 @@ export default function ContactPage() {
       {/* Map Section */}
       <div className="w-full">
         <iframe 
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d193595.15830869428!2d-74.11976379633749!3d40.69766374874431!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c24fa5d33f083b%3A0xc80b8f06e177fe62!2sNew%20York%2C%20NY%2C%20USA!5e0!3m2!1sen!2s!4v1612346852703!5m2!1sen!2s" 
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3241.329472092001!2d136.9352023758021!3d35.18123622400001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6001087d0d839573%3A0x42097772e907adbe!2sSS%20Holdings!5e0!3m2!1sen!2s!4v1720000000000!5m2!1sen!2s" 
           width="100%" 
           height="450" 
           style={{ border: 0 }} 
           loading="lazy"
           title="SS Holdings Location"
-          aria-label="Map showing the location of SS Holdings office in New York"
+          aria-label="Map showing the location of SS Holdings office in Nagoya, Aichi, Japan"
           className="mt-0"
         ></iframe>
       </div>

@@ -1,6 +1,6 @@
 import express from 'express';
-import { register, login, getCurrentUser } from '../controllers/auth.controller';
-import { registerValidation, loginValidation } from '../middleware/validation.middleware';
+import { register, login, getCurrentUser, changePassword, updateProfile } from '../controllers/auth.controller';
+import { registerValidation, loginValidation, passwordChangeValidation, profileUpdateValidation } from '../middleware/validation.middleware';
 import { protect } from '../middleware/auth.middleware';
 
 const router = express.Router();
@@ -13,5 +13,11 @@ router.post('/login', loginValidation, login);
 
 // GET /api/auth/me - Get current user profile (protected route)
 router.get('/me', protect, getCurrentUser);
+
+// PUT /api/auth/change-password - Change password (protected route)
+router.put('/change-password', protect, passwordChangeValidation, changePassword);
+
+// PUT /api/auth/update-profile - Update profile (protected route)
+router.put('/update-profile', protect, profileUpdateValidation, updateProfile);
 
 export default router; 

@@ -159,4 +159,93 @@ export const getCurrentUser = async (req: Request, res: Response): Promise<void>
     console.error('Get user error:', error);
     res.status(500).json({ message: 'Server error fetching user data' });
   }
+};
+
+// Change password
+export const changePassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const userId = (req as any).user.id;
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await user.comparePassword(currentPassword);
+    if (!isCurrentPasswordValid) {
+      res.status(400).json({ message: 'Current password is incorrect' });
+      return;
+    }
+
+    // Check if new password is different from current
+    const isNewPasswordSame = await user.comparePassword(newPassword);
+    if (isNewPasswordSame) {
+      res.status(400).json({ message: 'New password must be different from current password' });
+      return;
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ message: 'Server error changing password' });
+  }
+};
+
+// Update profile
+export const updateProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    // Check for validation errors
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ errors: errors.array() });
+      return;
+    }
+
+    const { name, email } = req.body;
+    const userId = (req as any).user.id;
+
+    // Find user
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ message: 'User not found' });
+      return;
+    }
+
+    // Check if email is already taken by another user
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        res.status(400).json({ message: 'Email is already taken' });
+        return;
+      }
+    }
+
+    // Update user fields
+    if (name) user.name = name;
+    if (email) user.email = email;
+
+    await user.save();
+
+    // Return updated user without password
+    const updatedUser = await User.findById(userId).select('-password');
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Server error updating profile' });
+  }
 }; 

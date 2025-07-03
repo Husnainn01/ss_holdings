@@ -82,6 +82,39 @@ export const roleUpdateValidation = [
     .withMessage(`Role must be one of: ${Object.values(ROLES).join(', ')}`)
 ];
 
+// Password change validation
+export const passwordChangeValidation = [
+  body('currentPassword')
+    .notEmpty()
+    .withMessage('Current password is required'),
+  
+  body('newPassword')
+    .notEmpty()
+    .withMessage('New password is required')
+    .isLength({ min: 6 })
+    .withMessage('New password must be at least 6 characters long')
+];
+
+// Profile update validation
+export const profileUpdateValidation = [
+  body('name')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Name cannot be empty')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Name must be between 2 and 50 characters'),
+  
+  body('email')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Email cannot be empty')
+    .isEmail()
+    .withMessage('Please provide a valid email address')
+    .normalizeEmail()
+];
+
 // Permissions update validation
 export const permissionsUpdateValidation = [
   body('permissions')

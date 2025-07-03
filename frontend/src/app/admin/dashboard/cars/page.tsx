@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Search, Plus, Filter, ChevronDown, Edit, Trash2, Eye, Loader2 } from "lucide-react";
 import { vehicleAPI } from "@/services/api";
 import { IVehicle } from "@/types/vehicle";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { useConfirmation } from "@/hooks/useConfirmation";
 
 export default function CarsManagement() {
   const [cars, setCars] = useState<IVehicle[]>([]);
@@ -20,6 +22,9 @@ export default function CarsManagement() {
   const [error, setError] = useState<string | null>(null);
   
   const itemsPerPage = 10;
+  
+  // Confirmation dialog hook
+  const confirmation = useConfirmation();
   
   useEffect(() => {
     fetchCars();
@@ -94,21 +99,32 @@ export default function CarsManagement() {
     }).format(amount);
   };
 
-  // Handle delete car
-  const handleDeleteCar = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this car? This action cannot be undone.")) {
-      try {
-        setIsLoading(true);
-        await vehicleAPI.deleteVehicle(id);
-        
-        // Refresh the list
-        fetchCars();
-      } catch (error) {
-        console.error("Error deleting car:", error);
-        setError("Failed to delete vehicle. Please try again.");
-        setIsLoading(false);
+  // Handle delete car with confirmation
+  const handleDeleteCar = async (car: IVehicle) => {
+    confirmation.showConfirmation(
+      {
+        title: "Delete Vehicle",
+        message: `Are you sure you want to delete "${car.title}"? This action cannot be undone.`,
+        confirmText: "Delete Vehicle",
+        cancelText: "Cancel",
+        type: "danger"
+      },
+      async () => {
+        try {
+          await vehicleAPI.deleteVehicle(car._id as string);
+          
+          // Show success message
+          setError(null);
+          
+          // Refresh the list
+          fetchCars();
+        } catch (error) {
+          console.error("Error deleting car:", error);
+          setError("Failed to delete vehicle. Please try again.");
+          throw error; // Re-throw to prevent dialog from closing
+        }
       }
-    }
+    );
   };
 
   // Calculate total pages
@@ -360,7 +376,7 @@ export default function CarsManagement() {
                           <Edit size={18} />
                         </Link>
                         <button 
-                          onClick={() => handleDeleteCar(car._id as string)}
+                          onClick={() => handleDeleteCar(car)}
                           className="text-red-500 hover:text-red-700"
                         >
                           <Trash2 size={18} />
@@ -445,6 +461,19 @@ export default function CarsManagement() {
           </div>
         )}
       </div>
+      
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.hideConfirmation}
+        onConfirm={confirmation.handleConfirm}
+        title={confirmation.options.title}
+        message={confirmation.options.message}
+        confirmText={confirmation.options.confirmText}
+        cancelText={confirmation.options.cancelText}
+        type={confirmation.options.type}
+        isLoading={confirmation.isLoading}
+      />
     </div>
   );
 } 

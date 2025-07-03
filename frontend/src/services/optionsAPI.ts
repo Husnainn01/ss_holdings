@@ -1,6 +1,30 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://ssholdings-production.up.railway.app/api';
+// Determine the API base URL based on environment
+const getApiBaseUrl = () => {
+  // If NEXT_PUBLIC_API_URL is set, use it (for production)
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  // For development, check if we're running locally
+  if (typeof window !== 'undefined') {
+    // Client-side: check the current origin
+    if (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')) {
+      return 'http://localhost:5001/api';
+    }
+  } else {
+    // Server-side: check NODE_ENV
+    if (process.env.NODE_ENV === 'development') {
+      return 'http://localhost:5001/api';
+    }
+  }
+  
+  // Default to production
+  return 'https://ssholdings-production.up.railway.app/api';
+};
+
+const API_URL = getApiBaseUrl();
 
 // Define Option interface
 export interface Option {

@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadFileToSFTP } from './sftpUpload.util';
+import SftpUsage from '../models/sftpUsage.model';
 import os from 'os';
 
 // Create temporary directory for uploads
@@ -40,6 +41,47 @@ const multerUpload = multer({
     fileSize: 5 * 1024 * 1024 // 5MB limit
   }
 });
+
+// Helper function to determine file type
+const getFileType = (mimetype: string): 'images' | 'documents' | 'others' => {
+  if (mimetype.startsWith('image/')) return 'images';
+  if (mimetype.includes('pdf') || mimetype.includes('document') || mimetype.includes('text')) return 'documents';
+  return 'others';
+};
+
+// Helper function to log SFTP usage
+const logSftpUsage = async (files: Express.Multer.File[]) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    for (const file of files) {
+      const fileType = getFileType(file.mimetype);
+      const fileSizeMB = file.size / (1024 * 1024);
+
+      // Log individual file upload
+      await SftpUsage.create({
+        date: today,
+        uploadsCount: 1,
+        totalSizeBytes: file.size,
+        totalSizeMB: fileSizeMB,
+        fileTypes: {
+          images: fileType === 'images' ? 1 : 0,
+          documents: fileType === 'documents' ? 1 : 0,
+          others: fileType === 'others' ? 1 : 0
+        },
+        operationType: 'upload',
+        filePath: file.path,
+        fileName: file.originalname,
+        fileSize: file.size
+      });
+    }
+
+    console.log(`SFTP Usage logged: ${files.length} files uploaded, ${files.reduce((sum, f) => sum + f.size, 0)} bytes`);
+  } catch (error) {
+    console.error('Error logging SFTP usage:', error);
+  }
+};
 
 /**
  * Middleware to handle file uploads via SFTP
@@ -90,6 +132,9 @@ export const sftpUploadMiddleware = (fieldName: string = 'images', maxCount: num
         
         // Replace the files array with the enhanced files
         req.files = uploadedFiles;
+        
+        // Log SFTP usage
+        await logSftpUsage(req.files);
         
         next();
       } catch (error: any) {

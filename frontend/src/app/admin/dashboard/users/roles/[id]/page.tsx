@@ -15,17 +15,15 @@ import {
 } from "lucide-react";
 import { userAPI, roleAPI } from "@/services/api";
 
-// Define permission types based on our backend
+// Define permission and role types based on backend
 interface Permission {
-  resource: string;
-  actions: string[];
+  name: string;
+  value: string;
 }
 
 interface Role {
-  _id: string;
   name: string;
-  description: string;
-  permissions: Permission[];
+  permissions: string[];
 }
 
 interface UserData {
@@ -33,27 +31,49 @@ interface UserData {
   name: string;
   email: string;
   role: string;
-  permissions: Permission[];
+  permissions: string[];
+  isActive: boolean;
 }
 
-// All available resources and actions
-const ALL_RESOURCES = [
-  { 
-    name: "users", 
-    label: "Users", 
-    actions: ["view", "create", "edit", "delete"]
-  },
-  { 
-    name: "vehicles", 
-    label: "Vehicles", 
-    actions: ["view", "create", "edit", "delete"]
-  },
-  { 
-    name: "settings", 
-    label: "Settings", 
-    actions: ["view", "edit"]
-  }
-];
+// Permission categories for better organization
+const PERMISSION_CATEGORIES = {
+  'Vehicle Management': [
+    'view_vehicles',
+    'create_vehicle', 
+    'edit_vehicle',
+    'delete_vehicle',
+    'feature_vehicle'
+  ],
+  'User Management': [
+    'view_users',
+    'create_user',
+    'edit_user', 
+    'delete_user'
+  ],
+  'Dashboard & Reports': [
+    'view_dashboard',
+    'view_statistics'
+  ],
+  'Settings': [
+    'manage_settings'
+  ]
+};
+
+// Permission labels for display
+const PERMISSION_LABELS: Record<string, string> = {
+  'view_vehicles': 'View Vehicles',
+  'create_vehicle': 'Create Vehicle',
+  'edit_vehicle': 'Edit Vehicle', 
+  'delete_vehicle': 'Delete Vehicle',
+  'feature_vehicle': 'Feature Vehicle',
+  'view_users': 'View Users',
+  'create_user': 'Create User',
+  'edit_user': 'Edit User',
+  'delete_user': 'Delete User',
+  'view_dashboard': 'View Dashboard',
+  'view_statistics': 'View Statistics',
+  'manage_settings': 'Manage Settings'
+};
 
 export default function UserRolesPage() {
   const params = useParams();
@@ -64,8 +84,9 @@ export default function UserRolesPage() {
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState<UserData | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>("");
-  const [customPermissions, setCustomPermissions] = useState<Permission[]>([]);
+  const [customPermissions, setCustomPermissions] = useState<string[]>([]);
   const [hasCustomPermissions, setHasCustomPermissions] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -76,14 +97,17 @@ export default function UserRolesPage() {
       try {
         setLoading(true);
         
-        // Fetch roles
-        const rolesResponse = await roleAPI.getRoles();
+        // Fetch roles and permissions in parallel
+        const [rolesResponse, permissionsResponse, userResponse] = await Promise.all([
+          roleAPI.getRoles(),
+          roleAPI.getPermissions(),
+          userAPI.getUserPermissions(userId)
+        ]);
+        
         setRoles(rolesResponse.data);
+        setAllPermissions(permissionsResponse.data);
         
-        // Fetch user permissions
-        const userResponse = await userAPI.getUserPermissions(userId);
-        const userData = userResponse.data;
-        
+        const userData = userResponse.data.user;
         if (!userData) {
           setErrorMessage("User not found");
           setLoading(false);
@@ -92,11 +116,11 @@ export default function UserRolesPage() {
         
         setUser(userData);
         setSelectedRole(userData.role);
-        setCustomPermissions(userData.permissions);
+        setCustomPermissions(userData.permissions || []);
         
-            // Check if user has custom permissions that don't match their role
-    const rolePermissions = rolesResponse.data.find((r: Role) => r.name.toLowerCase() === userData.role.toLowerCase())?.permissions || [];
-    setHasCustomPermissions(!arePermissionsEqual(userData.permissions, rolePermissions));
+        // Check if user has custom permissions that don't match their role
+        const rolePermissions = rolesResponse.data.find((r: Role) => r.name.toLowerCase() === userData.role.toLowerCase())?.permissions || [];
+        setHasCustomPermissions(!arraysEqual(userData.permissions || [], rolePermissions));
         
         setLoading(false);
       } catch (error) {
@@ -109,29 +133,12 @@ export default function UserRolesPage() {
     fetchData();
   }, [userId]);
 
-  // Helper function to compare permissions
-  const arePermissionsEqual = (perms1: Permission[], perms2: Permission[]): boolean => {
-    if (perms1.length !== perms2.length) return false;
-    
-    // Create a map of resource to actions for easier comparison
-    const permsMap1 = perms1.reduce((acc, perm) => {
-      acc[perm.resource] = new Set(perm.actions);
-      return acc;
-    }, {} as Record<string, Set<string>>);
-    
-    // Check if all permissions in perms2 match perms1
-    for (const perm of perms2) {
-      const actions1 = permsMap1[perm.resource];
-      if (!actions1) return false;
-      
-      if (actions1.size !== perm.actions.length) return false;
-      
-      for (const action of perm.actions) {
-        if (!actions1.has(action)) return false;
-      }
-    }
-    
-    return true;
+  // Helper function to compare arrays
+  const arraysEqual = (arr1: string[], arr2: string[]): boolean => {
+    if (arr1.length !== arr2.length) return false;
+    const sorted1 = [...arr1].sort();
+    const sorted2 = [...arr2].sort();
+    return sorted1.every((val, index) => val === sorted2[index]);
   };
 
   // Handle role change
@@ -139,7 +146,7 @@ export default function UserRolesPage() {
     const newRole = e.target.value;
     setSelectedRole(newRole);
     
-    // Update permissions based on the selected role
+    // Update permissions based on the selected role if not using custom permissions
     if (!hasCustomPermissions) {
       const rolePermissions = roles.find(r => r.name.toLowerCase() === newRole.toLowerCase())?.permissions || [];
       setCustomPermissions([...rolePermissions]);
@@ -159,47 +166,18 @@ export default function UserRolesPage() {
   };
 
   // Check if a permission is granted
-  const hasPermission = (resource: string, action: string): boolean => {
-    const resourcePermission = customPermissions.find(p => p.resource === resource);
-    return resourcePermission ? resourcePermission.actions.includes(action) : false;
+  const hasPermission = (permission: string): boolean => {
+    return customPermissions.includes(permission);
   };
 
   // Toggle a specific permission
-  const togglePermission = (resource: string, action: string) => {
-    setCustomPermissions(prevPermissions => {
-      const newPermissions = [...prevPermissions];
-      const resourceIndex = newPermissions.findIndex(p => p.resource === resource);
-      
-      if (resourceIndex === -1) {
-        // Resource doesn't exist yet, add it
-        newPermissions.push({
-          resource,
-          actions: [action]
-        });
+  const togglePermission = (permission: string) => {
+    setCustomPermissions(prev => {
+      if (prev.includes(permission)) {
+        return prev.filter(p => p !== permission);
       } else {
-        // Resource exists, toggle the action
-        const actions = newPermissions[resourceIndex].actions;
-        if (actions.includes(action)) {
-          // Remove the action
-          newPermissions[resourceIndex] = {
-            ...newPermissions[resourceIndex],
-            actions: actions.filter(a => a !== action)
-          };
-          
-          // If no actions left, remove the resource
-          if (newPermissions[resourceIndex].actions.length === 0) {
-            newPermissions.splice(resourceIndex, 1);
-          }
-        } else {
-          // Add the action
-          newPermissions[resourceIndex] = {
-            ...newPermissions[resourceIndex],
-            actions: [...actions, action]
-          };
-        }
+        return [...prev, permission];
       }
-      
-      return newPermissions;
     });
   };
 
@@ -210,11 +188,13 @@ export default function UserRolesPage() {
       setSuccessMessage("");
       setErrorMessage("");
       
-      await userAPI.updateUserPermissions(userId, {
-        role: selectedRole,
-        hasCustomPermissions,
-        permissions: hasCustomPermissions ? customPermissions : undefined
-      });
+      // Update role first
+      await roleAPI.updateUserRole(userId, selectedRole);
+      
+      // Update permissions if custom permissions are enabled
+      if (hasCustomPermissions) {
+        await roleAPI.updateUserPermissions(userId, customPermissions);
+      }
       
       setSuccessMessage("User permissions updated successfully");
       setSaving(false);
@@ -223,11 +203,6 @@ export default function UserRolesPage() {
       setErrorMessage("Failed to update user permissions");
       setSaving(false);
     }
-  };
-
-  // Action label formatting
-  const formatActionLabel = (action: string): string => {
-    return action.charAt(0).toUpperCase() + action.slice(1);
   };
 
   if (loading) {
@@ -313,6 +288,11 @@ export default function UserRolesPage() {
             <div className="ml-4">
               <h2 className="text-lg font-medium text-gray-900">{user.name}</h2>
               <p className="text-sm text-gray-500">{user.email}</p>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+              }`}>
+                {user.isActive ? 'Active' : 'Inactive'}
+              </span>
             </div>
           </div>
         </div>
@@ -333,13 +313,13 @@ export default function UserRolesPage() {
                 onChange={handleRoleChange}
               >
                 {roles.map((role) => (
-                  <option key={role._id} value={role.name.toLowerCase()}>
-                    {role.name}
+                  <option key={role.name} value={role.name.toLowerCase()}>
+                    {role.name.charAt(0).toUpperCase() + role.name.slice(1)}
                   </option>
                 ))}
               </select>
               <p className="mt-2 text-sm text-gray-500">
-                {roles.find(r => r.name.toLowerCase() === selectedRole.toLowerCase())?.description}
+                Current role: {selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}
               </p>
             </div>
             
@@ -398,30 +378,30 @@ export default function UserRolesPage() {
           </div>
           
           <div className="space-y-6">
-            {ALL_RESOURCES.map((resource) => (
-              <div key={resource.name} className="border border-gray-200 rounded-md overflow-hidden">
+            {Object.entries(PERMISSION_CATEGORIES).map(([category, permissions]) => (
+              <div key={category} className="border border-gray-200 rounded-md overflow-hidden">
                 <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-                  <h4 className="text-sm font-medium text-gray-900">{resource.label}</h4>
+                  <h4 className="text-sm font-medium text-gray-900">{category}</h4>
                 </div>
                 <div className="p-4">
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {resource.actions.map((action) => (
-                      <div key={`${resource.name}-${action}`} className="flex items-center">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {permissions.map((permission) => (
+                      <div key={permission} className="flex items-center">
                         <input
                           type="checkbox"
-                          id={`${resource.name}-${action}`}
-                          checked={hasPermission(resource.name, action)}
-                          onChange={() => hasCustomPermissions && togglePermission(resource.name, action)}
+                          id={permission}
+                          checked={hasPermission(permission)}
+                          onChange={() => hasCustomPermissions && togglePermission(permission)}
                           disabled={!hasCustomPermissions}
                           className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                         />
                         <label
-                          htmlFor={`${resource.name}-${action}`}
+                          htmlFor={permission}
                           className={`ml-2 block text-sm ${
                             hasCustomPermissions ? "text-gray-900" : "text-gray-500"
                           }`}
                         >
-                          {formatActionLabel(action)}
+                          {PERMISSION_LABELS[permission] || permission}
                         </label>
                       </div>
                     ))}

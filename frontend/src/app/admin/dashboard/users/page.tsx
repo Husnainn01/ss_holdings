@@ -16,6 +16,8 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { userAPI } from "@/services/api";
+import { ConfirmationDialog } from "@/components/ui/confirmation-dialog";
+import { useConfirmation } from "@/hooks/useConfirmation";
 
 interface User {
   _id: string;
@@ -36,6 +38,9 @@ export default function UsersPage() {
   const [selectedRole, setSelectedRole] = useState<string>("all");
   const [totalCount, setTotalCount] = useState(0);
   const [itemsPerPage] = useState(10);
+
+  // Confirmation dialog hook
+  const confirmation = useConfirmation();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -82,18 +87,32 @@ export default function UsersPage() {
     setCurrentPage(1);
   };
 
-  const handleDeleteUser = async (userId: string) => {
-    if (confirm("Are you sure you want to delete this user?")) {
-      try {
-        await userAPI.deleteUser(userId);
-        // Refresh the user list
-        setUsers(users.filter(user => user._id !== userId));
-        setTotalCount(prev => prev - 1);
-      } catch (error) {
-        console.error("Error deleting user:", error);
-        alert("Failed to delete user. Please try again.");
+  const handleDeleteUser = async (user: User) => {
+    confirmation.showConfirmation(
+      {
+        title: "Delete User",
+        message: `Are you sure you want to delete "${user.name}" (${user.email})? This action cannot be undone.`,
+        confirmText: "Delete User",
+        cancelText: "Cancel",
+        type: "danger"
+      },
+      async () => {
+        try {
+          await userAPI.deleteUser(user._id);
+          
+          // Remove user from state
+          setUsers(users.filter(u => u._id !== user._id));
+          setTotalCount(prev => prev - 1);
+          
+          // Clear any existing errors
+          setError(null);
+        } catch (error) {
+          console.error("Error deleting user:", error);
+          setError("Failed to delete user. Please try again.");
+          throw error; // Re-throw to prevent dialog from closing
+        }
       }
-    }
+    );
   };
 
   const formatDate = (dateString?: string) => {
@@ -169,6 +188,14 @@ export default function UsersPage() {
                 <option value="editor">Editor</option>
                 <option value="user">User</option>
               </select>
+
+              <Link
+                href="/admin/dashboard/users/roles"
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Manage Roles
+              </Link>
 
               <Link
                 href="/admin/dashboard/users/new"
@@ -297,7 +324,7 @@ export default function UsersPage() {
                         </Link>
                         <button
                           className="text-red-600 hover:text-red-900 p-2"
-                          onClick={() => handleDeleteUser(user._id)}
+                          onClick={() => handleDeleteUser(user)}
                         >
                           <Trash2 className="h-5 w-5" />
                         </button>
@@ -410,6 +437,19 @@ export default function UsersPage() {
           </div>
         </div>
       </div>
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={confirmation.isOpen}
+        onClose={confirmation.hideConfirmation}
+        onConfirm={confirmation.handleConfirm}
+        title={confirmation.options.title}
+        message={confirmation.options.message}
+        confirmText={confirmation.options.confirmText}
+        cancelText={confirmation.options.cancelText}
+        type={confirmation.options.type}
+        isLoading={confirmation.isLoading}
+      />
     </div>
   );
 } 

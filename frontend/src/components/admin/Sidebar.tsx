@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   LayoutDashboard,
@@ -14,7 +14,9 @@ import {
   Menu,
   X,
   ListChecks,
+  User,
 } from "lucide-react";
+import { authAPI } from "@/services/api";
 
 interface SidebarItem {
   name: string;
@@ -23,10 +25,45 @@ interface SidebarItem {
   subItems?: { name: string; href: string }[];
 }
 
+interface UserData {
+  _id: string;
+  name: string;
+  email: string;
+  role: string;
+  permissions: string[];
+}
+
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+  
+  // Fetch current user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('adminAuth');
+        if (!token) {
+          router.push('/admin/login');
+          return;
+        }
+
+        const response = await authAPI.checkAuth();
+        setUserData(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        // If auth fails, redirect to login
+        localStorage.removeItem('adminAuth');
+        router.push('/admin/login');
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
   
   // Auto-expand the current section
   useEffect(() => {
@@ -101,6 +138,24 @@ export default function Sidebar() {
       return true;
     }
     return pathname.startsWith(href) && href !== "/admin/dashboard";
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("adminAuth");
+    router.push('/admin/login');
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    return role.charAt(0).toUpperCase() + role.slice(1);
   };
 
   return (
@@ -211,26 +266,43 @@ export default function Sidebar() {
 
         {/* User profile and logout */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100">
-          <div className="flex items-center mb-4 px-2">
-            <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium">
-              JD
+          {loading ? (
+            <div className="flex items-center mb-4 px-2">
+              <div className="h-10 w-10 rounded-full bg-gray-200 animate-pulse"></div>
+              <div className="ml-3">
+                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse"></div>
+                <div className="h-3 w-16 bg-gray-200 rounded animate-pulse mt-1"></div>
+              </div>
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-900">John Doe</p>
-              <p className="text-xs text-gray-500">Administrator</p>
+          ) : userData ? (
+            <div className="flex items-center mb-4 px-2">
+              <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-medium">
+                {getInitials(userData.name)}
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900">{userData.name}</p>
+                <p className="text-xs text-gray-500">{getRoleDisplayName(userData.role)}</p>
+              </div>
             </div>
-          </div>
-          <Link
-            href="/admin/login"
-            onClick={() => {
-              // Clear auth token on logout
-              localStorage.removeItem("adminAuth");
-            }}
-            className="group flex items-center px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-red-50 hover:text-red-700 transition-colors"
+          ) : (
+            <div className="flex items-center mb-4 px-2">
+              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                <User className="h-5 w-5 text-gray-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-900">Not logged in</p>
+                <p className="text-xs text-gray-500">Please login</p>
+              </div>
+            </div>
+          )}
+          
+          <button
+            onClick={handleLogout}
+            className="group flex items-center w-full px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-red-50 hover:text-red-700 transition-colors"
           >
             <LogOut className="h-5 w-5 mr-2 text-gray-500 group-hover:text-red-600" />
             Logout
-          </Link>
+          </button>
         </div>
       </div>
 
