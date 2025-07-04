@@ -187,7 +187,7 @@ export default function BankingPage() {
                         onSuccess={handleTurnstileSuccess}
                         onError={(error) => {
                           console.error('Turnstile error:', error);
-                          alert(`Turnstile error: ${error}. Please check your site key configuration.`);
+                          alert('Verification failed. Please try again.');
                         }}
                       />
                     </div>

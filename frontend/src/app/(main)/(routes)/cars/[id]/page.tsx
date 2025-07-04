@@ -633,9 +633,8 @@ export default function CarDetailPage() {
                           siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAABjiJBiYGbz486u9"}
                           onSuccess={handleTurnstileSuccess}
                           onError={(error) => {
-                            console.error('Car details Turnstile error:', error);
-                            console.error('Site key being used:', process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAABjiJBiYGbz486u9");
-                            alert(`Turnstile error: ${error}. Site key: ${process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "fallback"}`);
+                            console.error('Turnstile error:', error);
+                            alert('Verification failed. Please try again.');
                           }}
                         />
                       </div>
