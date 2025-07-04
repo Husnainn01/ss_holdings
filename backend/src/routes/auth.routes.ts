@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, getCurrentUser, changePassword, updateProfile, verifyTurnstile, testTurnstileConfig } from '../controllers/auth.controller';
+import { register, login, getCurrentUser, changePassword, updateProfile, verifyTurnstile } from '../controllers/auth.controller';
 import { registerValidation, loginValidation, passwordChangeValidation, profileUpdateValidation } from '../middleware/validation.middleware';
 import { protect } from '../middleware/auth.middleware';
 
@@ -22,8 +22,5 @@ router.put('/update-profile', protect, profileUpdateValidation, updateProfile);
 
 // POST /api/auth/verify-turnstile - Verify Turnstile token (public route)
 router.post('/verify-turnstile', verifyTurnstile);
-
-// GET /api/auth/test-turnstile - Test Turnstile configuration (public route)
-router.get('/test-turnstile', testTurnstileConfig);
 
 export default router; 

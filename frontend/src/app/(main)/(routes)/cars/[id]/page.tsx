@@ -18,11 +18,13 @@ import {
   Phone, 
   Mail,
   Check,
-  ArrowRight
+  ArrowRight,
+  Lock
 } from 'lucide-react';
-import { vehicleAPI } from '@/services/api';
+import { vehicleAPI, authAPI } from '@/services/api';
 import { IVehicle, IVehicleImage } from '@/types/vehicle';
 import { updateImageUrl } from '@/lib/utils';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 // Check if a string is a valid MongoDB ObjectId
 function isValidObjectId(id: string): boolean {
@@ -53,6 +55,8 @@ export default function CarDetailPage() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [showTurnstile, setShowTurnstile] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   
   // Ref hooks
   const contactSectionRef = useRef<HTMLDivElement>(null);
@@ -132,10 +136,19 @@ export default function CarDetailPage() {
       return;
     }
     
+    // Check if Turnstile token is available
+    if (!turnstileToken) {
+      setShowTurnstile(true);
+      return;
+    }
+    
     setFormSubmitting(true);
     setFormError(null);
     
     try {
+      // Verify Turnstile token
+      await authAPI.verifyTurnstile(turnstileToken);
+      
       // Here you would typically send the form data to your backend API
       // For now, we'll just simulate a successful submission
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -148,12 +161,22 @@ export default function CarDetailPage() {
         country: '',
         message: ''
       });
+      setShowTurnstile(false);
+      setTurnstileToken(null);
     } catch (error) {
       console.error('Error submitting inquiry:', error);
-      setFormError('Failed to submit inquiry. Please try again.');
+      setFormError('Verification failed. Please try again.');
+      setShowTurnstile(false);
+      setTurnstileToken(null);
     } finally {
       setFormSubmitting(false);
     }
+  };
+  
+  // Handle Turnstile success
+  const handleTurnstileSuccess = (token: string) => {
+    setTurnstileToken(token);
+    setShowTurnstile(false);
   };
 
   const handlePrevImage = () => {
@@ -598,12 +621,38 @@ export default function CarDetailPage() {
                         required
                       ></textarea>
                     </div>
+                    
+                    {/* Turnstile Verification */}
+                    {showTurnstile && (
+                      <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                        <div className="flex items-center mb-3">
+                          <Lock className="h-4 w-4 text-gray-500 mr-2" />
+                          <p className="text-sm text-gray-600">Please verify that you are human</p>
+                        </div>
+                        <Turnstile
+                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "YOUR_SITE_KEY"}
+                          onSuccess={handleTurnstileSuccess}
+                          onError={(error) => {
+                            console.error('Turnstile error:', error);
+                            alert(`Turnstile error: ${error}. Please check your site key configuration.`);
+                          }}
+                        />
+                      </div>
+                    )}
+                    
                     <Button 
                       type="submit"
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-lg"
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-lg disabled:opacity-50"
                       disabled={formSubmitting}
                     >
-                      {formSubmitting ? 'Submitting...' : 'Submit Inquiry'}
+                      {formSubmitting ? (
+                        <div className="flex items-center justify-center">
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                          Submitting...
+                        </div>
+                      ) : (
+                        'Submit Inquiry'
+                      )}
                     </Button>
                   </form>
                 )}

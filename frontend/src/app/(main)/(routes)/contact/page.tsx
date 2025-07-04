@@ -14,25 +14,60 @@ import {
   User,
   MessageSquare,
   Building,
-  Globe
+  Globe,
+  Lock
 } from 'lucide-react';
+import { Turnstile } from '@marsidev/react-turnstile';
+import { authAPI } from '@/services/api';
 
 export default function ContactPage() {
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
+  const [showTurnstile, setShowTurnstile] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add your form submission logic here
     
-    // Show success message
-    setIsFormSubmitted(true);
+    if (!turnstileToken) {
+      setShowTurnstile(true);
+      return;
+    }
     
-    // Reset form after 5 seconds
-    setTimeout(() => {
-      setIsFormSubmitted(false);
-      const form = e.target as HTMLFormElement;
-      form.reset();
-    }, 5000);
+    setIsSubmitting(true);
+    
+    try {
+      // Verify Turnstile token
+      await authAPI.verifyTurnstile(turnstileToken);
+      
+      // Here you would typically send the form data to your backend
+      // For now, we'll just simulate a successful submission
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Show success message
+      setIsFormSubmitted(true);
+      
+      // Reset form after 5 seconds
+      setTimeout(() => {
+        setIsFormSubmitted(false);
+        setShowTurnstile(false);
+        setTurnstileToken(null);
+        const form = e.target as HTMLFormElement;
+        form.reset();
+      }, 5000);
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Verification failed. Please try again.');
+      setShowTurnstile(false);
+      setTurnstileToken(null);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleTurnstileSuccess = (token: string) => {
+    setTurnstileToken(token);
+    setShowTurnstile(false);
   };
 
   return (
@@ -239,12 +274,35 @@ export default function ContactPage() {
                       ></textarea>
                     </div>
                     
+                    {/* Turnstile Verification */}
+                    {showTurnstile && (
+                      <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                        <div className="flex items-center mb-3">
+                          <Lock className="h-4 w-4 text-gray-500 mr-2" />
+                          <p className="text-sm text-gray-600">Please verify that you are human</p>
+                        </div>
+                        <Turnstile
+                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "YOUR_SITE_KEY"}
+                          onSuccess={handleTurnstileSuccess}
+                          onError={(error) => {
+                            console.error('Turnstile error:', error);
+                            alert(`Turnstile error: ${error}. Please check your site key configuration.`);
+                          }}
+                        />
+                      </div>
+                    )}
+                    
                     <button
                       type="submit"
-                      className="w-full py-3 px-6 flex items-center justify-center bg-primary text-white rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors font-medium text-lg"
+                      className="w-full py-3 px-6 flex items-center justify-center bg-primary text-white rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors font-medium text-lg disabled:opacity-50"
+                      disabled={isSubmitting}
                     >
-                      <Send className="h-5 w-5 mr-2" />
-                      Send Message
+                      {isSubmitting ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      ) : (
+                        <Send className="h-5 w-5 mr-2" />
+                      )}
+                      {isSubmitting ? 'Sending...' : 'Send Message'}
                     </button>
                   </form>
                 )}

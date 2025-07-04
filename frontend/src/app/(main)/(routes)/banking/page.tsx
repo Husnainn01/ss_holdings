@@ -50,17 +50,6 @@ export default function BankingPage() {
     setShowVerification(index);
   };
 
-  const testTurnstileConfig = async () => {
-    try {
-      const response = await authAPI.testTurnstileConfig();
-      console.log('Turnstile config test:', response.data);
-      alert(`Config test: ${JSON.stringify(response.data, null, 2)}`);
-    } catch (error: any) {
-      console.error('Config test error:', error);
-      alert(`Config test error: ${error.message}`);
-    }
-  };
-
   const handleTurnstileSuccess = async (token: string) => {
     setTurnstileToken(token);
     
@@ -99,14 +88,6 @@ export default function BankingPage() {
           <p className="mt-4 text-lg text-gray-600 max-w-3xl">
             Secure and convenient payment options for your vehicle purchase. Please use the banking details below for wire transfers and international payments.
           </p>
-          
-          {/* Debug button - remove this in production */}
-          <button
-            onClick={testTurnstileConfig}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
-          >
-            Test Turnstile Config (Debug)
-          </button>
         </div>
       </div>
 

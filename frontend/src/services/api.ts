@@ -64,9 +64,6 @@ export const authAPI = {
   
   verifyTurnstile: (token: string) => 
     api.post('/auth/verify-turnstile', { token }),
-  
-  testTurnstileConfig: () => 
-    api.get('/auth/test-turnstile'),
 };
 
 // User API

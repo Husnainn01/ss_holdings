@@ -250,42 +250,17 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
   }
 };
 
-// Test Turnstile configuration
-export const testTurnstileConfig = async (req: Request, res: Response) => {
-  try {
-    res.json({
-      success: true,
-      config: {
-        hasSecretKey: !!config.turnstile.secretKey,
-        secretKeyLength: config.turnstile.secretKey?.length || 0,
-        secretKeyPrefix: config.turnstile.secretKey?.substring(0, 10) || 'Not set'
-      }
-    });
-  } catch (error) {
-    console.error('Config test error:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error testing configuration' 
-    });
-  }
-};
-
 // Verify Turnstile token
 export const verifyTurnstile = async (req: Request, res: Response) => {
   try {
-    console.log('Turnstile verification request received:', req.body);
     const { token } = req.body;
 
     if (!token) {
-      console.log('No token provided in request');
       return res.status(400).json({ 
         success: false, 
         message: 'Token is required' 
       });
     }
-
-    console.log('Token received:', token);
-    console.log('Secret key configured:', config.turnstile.secretKey ? 'Yes' : 'No');
 
     // Verify the token with Cloudflare Turnstile
     const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
@@ -297,16 +272,13 @@ export const verifyTurnstile = async (req: Request, res: Response) => {
     });
 
     const data = await response.json();
-    console.log('Cloudflare response:', data);
 
     if (data.success) {
-      console.log('Token verification successful');
       res.json({ 
         success: true, 
         message: 'Token verified successfully' 
       });
     } else {
-      console.log('Token verification failed:', data['error-codes']);
       res.status(400).json({ 
         success: false, 
         message: 'Token verification failed',
