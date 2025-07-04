@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, getCurrentUser, changePassword, updateProfile } from '../controllers/auth.controller';
+import { register, login, getCurrentUser, changePassword, updateProfile, verifyTurnstile } from '../controllers/auth.controller';
 import { registerValidation, loginValidation, passwordChangeValidation, profileUpdateValidation } from '../middleware/validation.middleware';
 import { protect } from '../middleware/auth.middleware';
 
@@ -19,5 +19,8 @@ router.put('/change-password', protect, passwordChangeValidation, changePassword
 
 // PUT /api/auth/update-profile - Update profile (protected route)
 router.put('/update-profile', protect, profileUpdateValidation, updateProfile);
+
+// POST /api/auth/verify-turnstile - Verify Turnstile token (public route)
+router.post('/verify-turnstile', verifyTurnstile);
 
 export default router; 

@@ -15,6 +15,9 @@ interface Config {
     apiToken: string;
     imagesEndpoint: string;
   };
+  turnstile: {
+    secretKey: string;
+  };
   cdn: {
     url: string;
     uploadsPath: string;
@@ -51,6 +54,11 @@ const config: Config = {
   cdn: {
     url: process.env.CDN_URL || 'https://cdn.ss.holdings',
     uploadsPath: '/uploads'
+  },
+  
+  // Turnstile configuration (for verification)
+  turnstile: {
+    secretKey: process.env.TURNSTILE_SECRET_KEY || ''
   }
 };
 

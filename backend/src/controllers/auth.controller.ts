@@ -248,4 +248,48 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
     console.error('Update profile error:', error);
     res.status(500).json({ message: 'Server error updating profile' });
   }
+};
+
+// Verify Turnstile token
+export const verifyTurnstile = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Token is required' 
+      });
+    }
+
+    // Verify the token with Cloudflare Turnstile
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `secret=${config.turnstile.secretKey}&response=${token}`
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      res.json({ 
+        success: true, 
+        message: 'Token verified successfully' 
+      });
+    } else {
+      res.status(400).json({ 
+        success: false, 
+        message: 'Token verification failed',
+        errors: data['error-codes'] || []
+      });
+    }
+  } catch (error) {
+    console.error('Turnstile verification error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error during verification' 
+    });
+  }
 }; 

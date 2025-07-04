@@ -51,10 +51,34 @@ export default function BankingPage() {
 
   const handleTurnstileSuccess = async (token: string) => {
     setTurnstileToken(token);
-    // In production, you would verify this token with your backend
-    // For now, we'll just show the account number
-    setVerifiedAccountId(showVerification);
-    setShowVerification(null);
+    
+    try {
+      // Verify the token with the backend
+      const response = await fetch('/api/auth/verify-turnstile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Token verified successfully, show the account number
+        setVerifiedAccountId(showVerification);
+        setShowVerification(null);
+      } else {
+        // Token verification failed
+        console.error('Token verification failed:', data.message);
+        alert('Verification failed. Please try again.');
+        setShowVerification(null);
+      }
+    } catch (error) {
+      console.error('Error verifying token:', error);
+      alert('Verification error. Please try again.');
+      setShowVerification(null);
+    }
   };
 
   const maskAccountNumber = (accountNumber: string) => {
@@ -165,7 +189,7 @@ export default function BankingPage() {
                         <p className="text-sm text-gray-600">Please verify that you are human</p>
                       </div>
                       <Turnstile
-                        siteKey="YOUR_SITE_KEY" // Replace with your Cloudflare Turnstile site key
+                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAAAB-V00000000000000000000000"}
                         onSuccess={handleTurnstileSuccess}
                       />
                     </div>
