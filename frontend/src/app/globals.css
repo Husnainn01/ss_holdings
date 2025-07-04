@@ -47,21 +47,22 @@
   --radius: 0.625rem;
   --background: #F4E7E1;
   --foreground: #212121;
-  --card: #F4E7E1;
+  --card: #FFFFFF;
   --card-foreground: #212121;
-  --popover: #F4E7E1;
+  --popover: #FFFFFF;
   --popover-foreground: #212121;
   --primary: #8A0000;
-  --primary-foreground: #F4E7E1;
+  --primary-foreground: #FFFFFF;
   --secondary: #FF7D29;
   --secondary-foreground: #212121;
   --muted: #F4E7E1;
-  --muted-foreground: #666666;
+  --muted-foreground: #64748B;
   --accent: #F4E7E1;
-  --accent-foreground: #8A0000;
-  --destructive: #d73737;
-  --border: #e5e5e5;
-  --input: #e5e5e5;
+  --accent-foreground: #212121;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: #E2E8F0;
+  --input: #E2E8F0;
   --ring: #8A0000;
   --chart-1: #8A0000;
   --chart-2: #FF7D29;
@@ -115,6 +116,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    font-family: 'Raleway', sans-serif;
   }
   body {
     @apply bg-background text-foreground;

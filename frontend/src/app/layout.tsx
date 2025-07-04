@@ -1,8 +1,6 @@
 import './globals.css'
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+import { raleway } from './fonts'
 
 export const metadata: Metadata = {
   title: {
@@ -28,12 +26,12 @@ export const metadata: Metadata = {
 // Admin routes have their own root layout in /admin/layout.tsx
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className={`${inter.className} antialiased bg-[#F4E7E1]`}>
+    <html lang="en" className={`${raleway.variable}`}>
+      <body className={`${raleway.className}`}>
         {children}
       </body>
     </html>
