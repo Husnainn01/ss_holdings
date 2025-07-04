@@ -189,8 +189,12 @@ export default function BankingPage() {
                         <p className="text-sm text-gray-600">Please verify that you are human</p>
                       </div>
                       <Turnstile
-                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAAAB-V00000000000000000000000"}
+                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAABjiJBiYGbz486u9"}
                         onSuccess={handleTurnstileSuccess}
+                        onError={(error) => {
+                          console.error('Turnstile error:', error);
+                          alert(`Turnstile error: ${error}. Please check your site key configuration.`);
+                        }}
                       />
                     </div>
                   )}
