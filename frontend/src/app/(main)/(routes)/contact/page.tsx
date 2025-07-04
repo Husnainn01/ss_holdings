@@ -22,7 +22,6 @@ import { authAPI } from '@/services/api';
 
 export default function ContactPage() {
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
-  const [showTurnstile, setShowTurnstile] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -30,7 +29,7 @@ export default function ContactPage() {
     e.preventDefault();
     
     if (!turnstileToken) {
-      setShowTurnstile(true);
+      alert('Please complete the verification first');
       return;
     }
     
@@ -50,7 +49,6 @@ export default function ContactPage() {
       // Reset form after 5 seconds
       setTimeout(() => {
         setIsFormSubmitted(false);
-        setShowTurnstile(false);
         setTurnstileToken(null);
         const form = e.target as HTMLFormElement;
         form.reset();
@@ -58,7 +56,6 @@ export default function ContactPage() {
     } catch (error) {
       console.error('Error submitting form:', error);
       alert('Verification failed. Please try again.');
-      setShowTurnstile(false);
       setTurnstileToken(null);
     } finally {
       setIsSubmitting(false);
@@ -67,7 +64,6 @@ export default function ContactPage() {
   
   const handleTurnstileSuccess = (token: string) => {
     setTurnstileToken(token);
-    setShowTurnstile(false);
   };
 
   return (
@@ -274,28 +270,27 @@ export default function ContactPage() {
                       ></textarea>
                     </div>
                     
-                                          {/* Turnstile Verification */}
-                      {showTurnstile && (
-                        <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                                                    <div className="flex items-center mb-3">
-                            <Lock className="h-4 w-4 text-gray-500 mr-2" />
-                            <p className="text-sm text-gray-600">Please verify that you are human</p>
-                          </div>
-                          <Turnstile
-                            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAABjiJBiYGbz486u9"}
-                            onSuccess={handleTurnstileSuccess}
-                            onError={(error) => {
-                              console.error('Turnstile error:', error);
-                              alert('Verification failed. Please try again.');
-                            }}
-                          />
+                    {/* Turnstile Verification */}
+                    <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                      <div className="flex items-center mb-3">
+                        <Lock className="h-4 w-4 text-gray-500 mr-2" />
+                        <p className="text-sm text-gray-600">Please verify that you are human</p>
                       </div>
-                    )}
+                      <Turnstile
+                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAABjiJBiYGbz486u9"}
+                        onSuccess={handleTurnstileSuccess}
+                        onError={(error) => {
+                          console.error('Turnstile error:', error);
+                          alert('Verification failed. Please try again.');
+                          setTurnstileToken(null);
+                        }}
+                      />
+                    </div>
                     
                     <button
                       type="submit"
                       className="w-full py-3 px-6 flex items-center justify-center bg-primary text-white rounded-lg hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors font-medium text-lg disabled:opacity-50"
-                      disabled={isSubmitting}
+                      disabled={isSubmitting || !turnstileToken}
                     >
                       {isSubmitting ? (
                         <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
