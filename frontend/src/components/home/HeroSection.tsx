@@ -25,7 +25,7 @@ interface HeroSectionProps {
 export default function HeroSection({
   title = "Export Quality Vehicles Worldwide",
   subtitle = "SS Holdings connects you with premium vehicles for export to any destination. Browse our inventory and find your perfect car today.",
-  imageUrl = "https://placehold.co/1600x900/png?text=Luxury+Car+Export",
+  imageUrl = "/hero-section/home-page.png",
   imageAlt = "Luxury car export",
   buttons = [
     {

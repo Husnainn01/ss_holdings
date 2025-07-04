@@ -9,7 +9,7 @@ const HeroBackgroundImage = () => {
   return (
     <div className="absolute inset-0 overflow-hidden">
       <Image 
-        src="/auction-hero.jpg" 
+        src="/hero-section/auction.jpg" 
         alt="Car auction" 
         fill
         className="object-cover opacity-20"

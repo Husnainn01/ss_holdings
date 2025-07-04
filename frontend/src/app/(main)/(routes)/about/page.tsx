@@ -128,7 +128,7 @@ export default function AboutPage() {
       <div className="relative h-[40vh] md:h-[50vh] bg-gradient-to-r from-gray-900 to-black overflow-hidden">
         <div className="absolute inset-0 opacity-30">
           <Image 
-            src="https://placehold.co/1920x1080/png?text=About+SS+Holdings" 
+            src="/hero-section/about-us.jpg" 
             alt="About SS Holdings"
             fill
             style={{ objectFit: 'cover' }}
