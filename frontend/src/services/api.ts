@@ -61,6 +61,9 @@ export const authAPI = {
   
   updateProfile: (data: { name: string; email: string }) => 
     api.put('/auth/update-profile', data),
+  
+  verifyTurnstile: (token: string) => 
+    api.post('/auth/verify-turnstile', { token }),
 };
 
 // User API

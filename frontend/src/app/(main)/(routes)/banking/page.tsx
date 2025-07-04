@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Shield, CreditCard, Building, Globe, ArrowRight, Eye, EyeOff, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { Turnstile } from '@marsidev/react-turnstile';
+import { authAPI } from '@/services/api';
 
 export default function BankingPage() {
   const [verifiedAccountId, setVerifiedAccountId] = useState<number | null>(null);
@@ -53,30 +54,23 @@ export default function BankingPage() {
     setTurnstileToken(token);
     
     try {
-      // Verify the token with the backend
-      const response = await fetch('/api/auth/verify-turnstile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      });
+      // Verify the token with the backend using the API service
+      const response = await authAPI.verifyTurnstile(token);
       
-      const data = await response.json();
-      
-      if (data.success) {
+      if (response.data.success) {
         // Token verified successfully, show the account number
         setVerifiedAccountId(showVerification);
         setShowVerification(null);
       } else {
         // Token verification failed
-        console.error('Token verification failed:', data.message);
+        console.error('Token verification failed:', response.data.message);
         alert('Verification failed. Please try again.');
         setShowVerification(null);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error verifying token:', error);
-      alert('Verification error. Please try again.');
+      const errorMessage = error.response?.data?.message || 'Verification error. Please try again.';
+      alert(errorMessage);
       setShowVerification(null);
     }
   };
