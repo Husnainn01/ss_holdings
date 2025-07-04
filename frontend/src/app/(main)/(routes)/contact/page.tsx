@@ -26,6 +26,9 @@ export default function ContactPage() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Debug: Log environment variable
+  console.log('Contact page - NEXT_PUBLIC_TURNSTILE_SITE_KEY:', process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -274,19 +277,25 @@ export default function ContactPage() {
                       ></textarea>
                     </div>
                     
-                    {/* Turnstile Verification */}
-                    {showTurnstile && (
-                      <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                        <div className="flex items-center mb-3">
-                          <Lock className="h-4 w-4 text-gray-500 mr-2" />
-                          <p className="text-sm text-gray-600">Please verify that you are human</p>
-                        </div>
+                                          {/* Turnstile Verification */}
+                      {showTurnstile && (
+                        <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                          <div className="flex items-center mb-3">
+                            <Lock className="h-4 w-4 text-gray-500 mr-2" />
+                            <p className="text-sm text-gray-600">Please verify that you are human</p>
+                          </div>
+                          {/* Debug info - remove in production */}
+                          <div className="mb-2 p-2 bg-blue-50 rounded text-xs">
+                            <strong>Debug:</strong> Site Key: {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ? 'Loaded' : 'Missing'} 
+                            ({(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "fallback").substring(0, 20)}...)
+                          </div>
                         <Turnstile
-                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "YOUR_SITE_KEY"}
+                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAABjiJBiYGbz486u9"}
                           onSuccess={handleTurnstileSuccess}
                           onError={(error) => {
-                            console.error('Turnstile error:', error);
-                            alert(`Turnstile error: ${error}. Please check your site key configuration.`);
+                            console.error('Contact page Turnstile error:', error);
+                            console.error('Site key being used:', process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAABjiJBiYGbz486u9");
+                            alert(`Turnstile error: ${error}. Site key: ${process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "fallback"}`);
                           }}
                         />
                       </div>

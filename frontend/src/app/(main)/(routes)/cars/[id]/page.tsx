@@ -630,11 +630,12 @@ export default function CarDetailPage() {
                           <p className="text-sm text-gray-600">Please verify that you are human</p>
                         </div>
                         <Turnstile
-                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "YOUR_SITE_KEY"}
+                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAABjiJBiYGbz486u9"}
                           onSuccess={handleTurnstileSuccess}
                           onError={(error) => {
-                            console.error('Turnstile error:', error);
-                            alert(`Turnstile error: ${error}. Please check your site key configuration.`);
+                            console.error('Car details Turnstile error:', error);
+                            console.error('Site key being used:', process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAABjiJBiYGbz486u9");
+                            alert(`Turnstile error: ${error}. Site key: ${process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "fallback"}`);
                           }}
                         />
                       </div>
