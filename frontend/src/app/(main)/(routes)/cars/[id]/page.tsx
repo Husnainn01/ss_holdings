@@ -55,7 +55,6 @@ export default function CarDetailPage() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
-  const [showTurnstile, setShowTurnstile] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   
   // Ref hooks
@@ -138,7 +137,7 @@ export default function CarDetailPage() {
     
     // Check if Turnstile token is available
     if (!turnstileToken) {
-      setShowTurnstile(true);
+      setFormError('Please complete the verification first');
       return;
     }
     
@@ -161,12 +160,10 @@ export default function CarDetailPage() {
         country: '',
         message: ''
       });
-      setShowTurnstile(false);
       setTurnstileToken(null);
     } catch (error) {
       console.error('Error submitting inquiry:', error);
       setFormError('Verification failed. Please try again.');
-      setShowTurnstile(false);
       setTurnstileToken(null);
     } finally {
       setFormSubmitting(false);
@@ -176,7 +173,6 @@ export default function CarDetailPage() {
   // Handle Turnstile success
   const handleTurnstileSuccess = (token: string) => {
     setTurnstileToken(token);
-    setShowTurnstile(false);
   };
 
   const handlePrevImage = () => {
@@ -623,27 +619,26 @@ export default function CarDetailPage() {
                     </div>
                     
                     {/* Turnstile Verification */}
-                    {showTurnstile && (
-                      <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
-                        <div className="flex items-center mb-3">
-                          <Lock className="h-4 w-4 text-gray-500 mr-2" />
-                          <p className="text-sm text-gray-600">Please verify that you are human</p>
-                        </div>
-                        <Turnstile
-                          siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAABjiJBiYGbz486u9"}
-                          onSuccess={handleTurnstileSuccess}
-                          onError={(error) => {
-                            console.error('Turnstile error:', error);
-                            alert('Verification failed. Please try again.');
-                          }}
-                        />
+                    <div className="bg-gray-50 rounded-lg border border-gray-200 p-4">
+                      <div className="flex items-center mb-3">
+                        <Lock className="h-4 w-4 text-gray-500 mr-2" />
+                        <p className="text-sm text-gray-600">Please verify that you are human</p>
                       </div>
-                    )}
+                      <Turnstile
+                        siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "0x4AAAAAABjiJBiYGbz486u9"}
+                        onSuccess={handleTurnstileSuccess}
+                        onError={(error) => {
+                          console.error('Turnstile error:', error);
+                          setFormError('Verification failed. Please try again.');
+                          setTurnstileToken(null);
+                        }}
+                      />
+                    </div>
                     
                     <Button 
                       type="submit"
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-lg disabled:opacity-50"
-                      disabled={formSubmitting}
+                      disabled={formSubmitting || !turnstileToken}
                     >
                       {formSubmitting ? (
                         <div className="flex items-center justify-center">
