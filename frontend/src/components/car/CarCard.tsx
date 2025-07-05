@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 import Link from 'next/link';
-import { Card } from "@/components/ui/card";
+// import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, GaugeIcon, FuelIcon, Settings2Icon, Tag, Heart, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
+// import { motion } from "framer-motion";
 import { updateImageUrl } from "@/lib/utils";
 
 interface CarCardProps {

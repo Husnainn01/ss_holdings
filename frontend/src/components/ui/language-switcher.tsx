@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useTranslation } from '@/app/i18n/client';
+// import { useTranslation } from '@/app/i18n/client';
 import { useRouter, usePathname } from 'next/navigation';
 import { languages } from '@/app/i18n/settings';
 import { useLanguage } from '@/components/providers/LanguageProvider';

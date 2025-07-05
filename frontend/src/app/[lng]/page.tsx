@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
-import { Button } from "@/components/ui/button";
+// import Image from 'next/image';
+// import { Button } from "@/components/ui/button";
 import HeroSection from '@/components/home/HeroSection';
 import BrandsSidebar from '@/components/home/BrandsSidebar';
 import SearchForm from '@/components/home/SearchForm';

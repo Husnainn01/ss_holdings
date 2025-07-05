@@ -1,6 +1,9 @@
 import React from 'react';
+import Link from 'next/link';
 import { Button } from './button';
 import { Card, CardContent, CardHeader, CardTitle } from './card';
+import { useTranslation } from '@/app/i18n/client';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 interface ComingSoonProps {
   title?: string;
@@ -10,11 +13,14 @@ interface ComingSoonProps {
 }
 
 export function ComingSoon({ 
-  title = "Coming Soon", 
-  description = "This feature is currently under development. Stay tuned for updates!",
+  title, 
+  description,
   showNotifyButton = true,
   onNotifyClick
 }: ComingSoonProps) {
+  const { currentLanguage } = useLanguage();
+  const { t } = useTranslation(currentLanguage);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg">
@@ -35,11 +41,13 @@ export function ComingSoon({
               />
             </svg>
           </div>
-          <CardTitle className="text-2xl font-bold text-gray-900">{title}</CardTitle>
+          <CardTitle className="text-2xl font-bold text-gray-900">
+            {title || "Coming Soon"}
+          </CardTitle>
         </CardHeader>
         <CardContent className="text-center space-y-6">
           <p className="text-gray-600 leading-relaxed">
-            {description}
+            {description || "This feature is currently under development. Stay tuned for updates!"}
           </p>
           
           <div className="space-y-4">
@@ -57,19 +65,19 @@ export function ComingSoon({
               className="w-full"
               onClick={() => window.history.back()}
             >
-              Go Back
+              {t('common.back')}
             </Button>
           </div>
           
           <div className="pt-4 border-t border-gray-200">
             <p className="text-sm text-gray-500">
               Need immediate assistance?{' '}
-              <a 
-                href="/contact" 
+              <Link 
+                href={`/${currentLanguage}/contact`}
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                Contact Us
-              </a>
+                {t('navigation.contact')}
+              </Link>
             </p>
           </div>
         </CardContent>
