@@ -197,7 +197,7 @@ export default function AboutPage() {
                   transition={{ duration: 0.3 }}
                 >
                   <Image
-                    src="https://placehold.co/600x400/png?text=Our+Mission"
+                    src="/hero-section/our-mission.jpg"
                     alt="Our Mission"
                     width={600}
                     height={400}
@@ -361,7 +361,7 @@ export default function AboutPage() {
                 </div>
                 <div className="hidden md:block relative">
                   <Image
-                    src="https://placehold.co/600x400/png?text=Contact+Us"
+                    src="/hero-section/contact.jpg"
                     alt="Contact Us"
                     fill
                     style={{ objectFit: 'cover' }}

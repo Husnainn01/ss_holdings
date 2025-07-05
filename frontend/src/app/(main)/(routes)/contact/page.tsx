@@ -39,9 +39,31 @@ export default function ContactPage() {
       // Verify Turnstile token
       await authAPI.verifyTurnstile(turnstileToken);
       
-      // Here you would typically send the form data to your backend
-      // For now, we'll just simulate a successful submission
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Get form data
+      const formData = new FormData(e.target as HTMLFormElement);
+      const contactData = {
+        name: formData.get('name') as string,
+        email: formData.get('email') as string,
+        phone: formData.get('phone') as string,
+        country: formData.get('country') as string,
+        subject: formData.get('subject') as string,
+        message: formData.get('message') as string,
+      };
+
+      // Send contact message to backend
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/contact/message`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to send message');
+      }
       
       // Show success message
       setIsFormSubmitted(true);
@@ -55,7 +77,7 @@ export default function ContactPage() {
       }, 5000);
     } catch (error) {
       console.error('Error submitting form:', error);
-      alert('Verification failed. Please try again.');
+      alert(error instanceof Error ? error.message : 'Failed to send message. Please try again.');
       setTurnstileToken(null);
     } finally {
       setIsSubmitting(false);

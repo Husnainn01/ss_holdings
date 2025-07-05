@@ -14,6 +14,8 @@ import uploadRoutes from './routes/upload.routes';
 import adminRoutes from './routes/admin.routes';
 import roleRoutes from './routes/role.routes';
 import optionsRoutes from './routes/options.routes';
+import shippingScheduleRoutes from './routes/shippingSchedule.routes';
+import contactRoutes from './routes/contact.routes';
 
 // Initialize Express app
 const app = express();
@@ -112,6 +114,8 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/roles', roleRoutes);
 app.use('/api/options', optionsRoutes);
+app.use('/api/shipping-schedule', shippingScheduleRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Root route
 app.get('/', (req, res) => {
@@ -126,7 +130,9 @@ app.get('/', (req, res) => {
       uploads: '/api/uploads',
       admin: '/api/admin',
       roles: '/api/roles',
-      options: '/api/options'
+      options: '/api/options',
+      'shipping-schedule': '/api/shipping-schedule',
+      contact: '/api/contact'
     }
   });
 });

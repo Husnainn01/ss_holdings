@@ -15,6 +15,7 @@ import {
   X,
   ListChecks,
   User,
+  Ship,
 } from "lucide-react";
 import { authAPI } from "@/services/api";
 
@@ -103,6 +104,15 @@ export default function Sidebar() {
         { name: "Body Types", href: "/admin/dashboard/options/bodyTypes" },
         { name: "Fuel Types", href: "/admin/dashboard/options/fuelTypes" },
         { name: "Transmission Types", href: "/admin/dashboard/options/transmissionTypes" },
+      ],
+    },
+    {
+      name: "Shipping Schedule",
+      href: "/admin/dashboard/shipping-schedule",
+      icon: Ship,
+      subItems: [
+        { name: "All Schedules", href: "/admin/dashboard/shipping-schedule" },
+        { name: "Add New Schedule", href: "/admin/dashboard/shipping-schedule/new" },
       ],
     },
     {

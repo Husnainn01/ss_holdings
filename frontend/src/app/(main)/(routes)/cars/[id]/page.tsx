@@ -148,9 +148,31 @@ export default function CarDetailPage() {
       // Verify Turnstile token
       await authAPI.verifyTurnstile(turnstileToken);
       
-      // Here you would typically send the form data to your backend API
-      // For now, we'll just simulate a successful submission
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Prepare car inquiry data
+      const inquiryData = {
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        country: formData.country,
+        vehicleId: id,
+        vehicleName: `${car?.year} ${car?.make} ${car?.model}`,
+        message: formData.message,
+      };
+
+      // Send car inquiry to backend
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/contact/car-inquiry`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(inquiryData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Failed to send inquiry');
+      }
       
       setFormSubmitted(true);
       setFormData({
@@ -163,7 +185,7 @@ export default function CarDetailPage() {
       setTurnstileToken(null);
     } catch (error) {
       console.error('Error submitting inquiry:', error);
-      setFormError('Verification failed. Please try again.');
+      setFormError(error instanceof Error ? error.message : 'Failed to send inquiry. Please try again.');
       setTurnstileToken(null);
     } finally {
       setFormSubmitting(false);
