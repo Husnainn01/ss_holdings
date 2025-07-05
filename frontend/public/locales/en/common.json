@@ -2,9 +2,64 @@
   "navigation": {
     "home": "Home",
     "cars": "Cars",
+    "auction": "Auction",
+    "howWeDeliver": "How We Deliver",
     "about": "About Us",
+    "banking": "Banking Info",
+    "contact": "Contact",
     "faq": "FAQ",
-    "contact": "Contact"
+    "login": "Login",
+    "register": "Register",
+    "getQuote": "Get a Quote"
+  },
+  "search": {
+    "title": "Find Your Perfect Vehicle",
+    "subtitle": "Search through our extensive inventory of quality vehicles available for export",
+    "make": "Make",
+    "selectMake": "Select Make",
+    "allMakes": "All Makes",
+    "model": "Model",
+    "selectModel": "Select Model",
+    "allModels": "All Models",
+    "year": "Year",
+    "selectYear": "Select Year",
+    "allYears": "All Years",
+    "priceRange": "Price Range",
+    "bodyType": "Body Type",
+    "selectBodyType": "Select Body Type",
+    "allBodyTypes": "All Body Types",
+    "fuelType": "Fuel Type",
+    "selectFuelType": "Select Fuel Type",
+    "allFuelTypes": "All Fuel Types",
+    "transmission": "Transmission",
+    "selectTransmission": "Select Transmission",
+    "allTransmissions": "All Transmissions",
+    "searchVehicles": "Search Vehicles",
+    "clearFilters": "Clear Filters"
+  },
+  "recentlyAdded": {
+    "title": "Recently Added Vehicles",
+    "subtitle": "Discover our latest arrivals - premium vehicles ready for export to your destination",
+    "viewDetails": "View Details",
+    "viewAllVehicles": "View All Vehicles",
+    "noVehicles": "No vehicles available at the moment"
+  },
+  "brands": {
+    "title": "Shop by Brand",
+    "subtitle": "Browse vehicles by your preferred manufacturer",
+    "viewAll": "View All Brands"
+  },
+  "shipping": {
+    "title": "Shipping Information",
+    "subtitle": "Latest shipping schedules and routes",
+    "fromPort": "From Port",
+    "toPort": "To Port",
+    "carrier": "Carrier",
+    "transitTime": "Transit Time",
+    "nextDeparture": "Next Departure",
+    "cutOffTime": "Cut-off Time",
+    "viewSchedule": "View Full Schedule",
+    "noSchedules": "No shipping schedules available"
   },
   "hero": {
     "title": "Export Quality Vehicles Worldwide",
@@ -41,8 +96,15 @@
     "browseInventory": "Browse Inventory"
   },
   "faq": {
+    "gotQuestions": "Got Questions?",
     "title": "Frequently Asked Questions",
     "subtitle": "Find answers to common questions about our car export services.",
+    "searchPlaceholder": "Search FAQ...",
+    "clearSearch": "Clear search",
+    "expandAll": "Expand All",
+    "collapseAll": "Collapse All",
+    "noResults": "No FAQs found matching your search.",
+    "contactOurTeam": "Contact Our Team",
     "viewAll": "View All FAQs",
     "questions": {
       "exportTime": {
@@ -62,10 +124,39 @@
   "footer": {
     "quickLinks": "Quick Links",
     "carCategories": "Car Categories",
+    "company": "Company",
+    "services": "Services",
+    "support": "Support",
+    "followUs": "Follow Us",
     "contactUs": "Contact Us",
+    "address": "Aichi Ken Nagoya Shi Minato Ku Nishifukuta 1-1506",
+    "phone": "+81 052 387 9772",
+    "email": "info@ss.holdings",
     "copyright": "© {{year}} SS Holdings. All rights reserved.",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
-    "shippingPolicy": "Shipping Policy"
+    "shippingPolicy": "Shipping Policy",
+    "description": "SS Holdings specializes in exporting high-quality vehicles to customers worldwide. We provide comprehensive export services with a focus on quality, reliability, and customer satisfaction."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "clear": "Clear",
+    "apply": "Apply",
+    "submit": "Submit",
+    "reset": "Reset"
   }
 } 

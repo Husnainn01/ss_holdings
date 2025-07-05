@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, Search, PlusCircle, MinusCircle } from 'lucide-react';
+import { useLanguage } from '@/components/providers/LanguageProvider';
+import { useTranslation } from '@/app/i18n/client';
 
 interface FAQItem {
   question: string;
@@ -30,6 +32,8 @@ const FAQAccordionItem = ({
   isExpanded: boolean;
   toggleItem: () => void;
 }) => {
+  const { currentLanguage } = useLanguage();
+  const { t } = useTranslation(currentLanguage);
   return (
     <motion.div 
       className={`border border-gray-200 rounded-lg overflow-hidden mb-4 ${isExpanded ? 'shadow-lg bg-white' : 'bg-white/50 hover:bg-white hover:shadow-md'}`}
@@ -72,12 +76,14 @@ const FAQAccordionItem = ({
 };
 
 export default function FAQSection({
-  title = "Frequently Asked Questions",
-  subtitle = "Find answers to common questions about our car export services.",
+  title,
+  subtitle,
   faqs,
-  viewAllLink = "/faq",
-  viewAllText = "View All FAQs"
+  viewAllLink,
+  viewAllText
 }: FAQSectionProps) {
+  const { currentLanguage } = useLanguage();
+  const { t } = useTranslation(currentLanguage);
   const [searchTerm, setSearchTerm] = useState('');
   const [expandAll, setExpandAll] = useState(false);
   const [expandedItems, setExpandedItems] = useState<number[]>([]);
@@ -138,7 +144,7 @@ export default function FAQSection({
             <div className="inline-block mb-3">
               <div className="flex items-center justify-center space-x-2">
                 <div className="h-1 w-6 bg-red-500"></div>
-                <span className="text-red-500 font-medium uppercase text-sm tracking-wider">Got Questions?</span>
+                <span className="text-red-500 font-medium uppercase text-sm tracking-wider">{t('faq.gotQuestions')}</span>
                 <div className="h-1 w-6 bg-red-500"></div>
               </div>
             </div>
@@ -149,7 +155,7 @@ export default function FAQSection({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              {title}
+              {title || t('faq.title')}
             </motion.h2>
             
             <motion.p 
@@ -158,7 +164,7 @@ export default function FAQSection({
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
             >
-              {subtitle}
+              {subtitle || t('faq.subtitle')}
             </motion.p>
           </div>
           
@@ -171,7 +177,7 @@ export default function FAQSection({
               <input 
                 type="text" 
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full md:w-80 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                placeholder="Search questions..."
+                placeholder={t('faq.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -180,7 +186,7 @@ export default function FAQSection({
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                   onClick={() => setSearchTerm('')}
                 >
-                  <span className="sr-only">Clear search</span>
+                  <span className="sr-only">{t('faq.clearSearch')}</span>
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -195,12 +201,12 @@ export default function FAQSection({
               {expandAll ? (
                 <>
                   <MinusCircle className="h-4 w-4 mr-2" />
-                  Collapse All
+                  {t('faq.collapseAll')}
                 </>
               ) : (
                 <>
                   <PlusCircle className="h-4 w-4 mr-2" />
-                  Expand All
+                  {t('faq.expandAll')}
                 </>
               )}
             </button>
@@ -220,12 +226,12 @@ export default function FAQSection({
               ))
             ) : (
               <div className="text-center py-8 bg-white rounded-lg shadow-sm border border-gray-200">
-                <p className="text-gray-500">No results match your search criteria.</p>
+                <p className="text-gray-500">{t('faq.noResults')}</p>
                 <button 
                   onClick={() => setSearchTerm('')}
                   className="mt-2 text-red-500 hover:text-red-700"
                 >
-                  Clear search
+                  {t('faq.clearSearch')}
                 </button>
               </div>
             )}
@@ -262,7 +268,7 @@ export default function FAQSection({
             <h4 className="font-medium text-gray-800 mb-2">Still have questions?</h4>
             <p className="text-gray-600 mb-4">We&apos;re here to help with any questions about exporting vehicles.</p>
             <Button asChild>
-              <Link href="/contact">Contact Our Team</Link>
+              <Link href={`/${currentLanguage}/contact`}>{t('faq.contactOurTeam')}</Link>
             </Button>
           </motion.div>
         </motion.div>

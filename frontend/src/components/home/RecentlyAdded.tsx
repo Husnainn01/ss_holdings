@@ -6,6 +6,8 @@ import CarCard from '@/components/car/CarCard';
 import { ArrowRight, Clock, RefreshCw } from 'lucide-react';
 import { motion, Variants } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { useTranslation } from '@/app/i18n/client';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 interface Car {
   id: string;
@@ -34,9 +36,11 @@ interface RecentlyAddedProps {
 
 export default function RecentlyAdded({ 
   cars = [], 
-  title = "Recently Added", 
+  title,
   showViewMore = true 
 }: RecentlyAddedProps) {
+  const { currentLanguage } = useLanguage();
+  const { t } = useTranslation(currentLanguage);
   const [isHovered, setIsHovered] = useState(false);
   
   // Animation variants
@@ -73,8 +77,8 @@ export default function RecentlyAdded({
             <Clock className="h-4 w-4 text-white" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white">{title} ({cars.length})</h2>
-            <p className="text-xs text-white/70">Discover our latest inventory additions</p>
+            <h2 className="text-lg font-bold text-white">{title || t('recentlyAdded.title')} ({cars.length})</h2>
+            <p className="text-xs text-white/70">{t('recentlyAdded.subtitle')}</p>
           </div>
         </div>
         
@@ -89,8 +93,8 @@ export default function RecentlyAdded({
               size="sm"
               className="bg-white/10 hover:bg-white/20 text-white border-0 backdrop-blur-sm"
             >
-              <Link href="/cars" className="flex items-center gap-1 text-xs font-medium">
-                View All Inventory
+              <Link href={`/${currentLanguage}/cars`} className="flex items-center gap-1 text-xs font-medium">
+                {t('recentlyAdded.viewAllVehicles')}
                 <ArrowRight className="h-3 w-3" />
               </Link>
             </Button>
@@ -119,7 +123,7 @@ export default function RecentlyAdded({
           </motion.div>
         ) : (
           <div className="py-8 text-center text-gray-500">
-            <p>No vehicles found. Check back soon for new inventory!</p>
+            <p>{t('recentlyAdded.noVehicles')}</p>
           </div>
         )}
         

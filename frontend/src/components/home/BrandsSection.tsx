@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { getOptionsByCategory } from '@/services/optionsAPI';
 import { updateImageUrl } from '@/lib/utils';
+import { useTranslation } from '@/app/i18n/client';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 interface Brand {
   name: string;
@@ -16,9 +18,11 @@ interface BrandsSectionProps {
 }
 
 export default function BrandsSection({
-  title = "Brands We Export",
+  title,
   initialBrands = []
 }: BrandsSectionProps) {
+  const { currentLanguage } = useLanguage();
+  const { t } = useTranslation(currentLanguage);
   const [brands, setBrands] = useState<Brand[]>(initialBrands);
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +57,8 @@ export default function BrandsSection({
       <section className="py-12 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold">{title}</h2>
+            <h2 className="text-3xl font-bold">{title || t('brands.title')}</h2>
+            <p className="text-gray-600 mt-2">{t('brands.subtitle')}</p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
@@ -76,7 +81,8 @@ export default function BrandsSection({
     <section className="py-12 bg-gray-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold">{title}</h2>
+          <h2 className="text-3xl font-bold">{title || t('brands.title')}</h2>
+          <p className="text-gray-600 mt-2">{t('brands.subtitle')}</p>
         </div>
         
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">

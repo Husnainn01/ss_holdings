@@ -13,6 +13,9 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Phone, Menu, X, ChevronDown, Globe, MapPin } from 'lucide-react';
 import Image from 'next/image';
+import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { useTranslation } from '@/app/i18n/client';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 interface MenuItem {
   name: string;
@@ -98,6 +101,8 @@ const MegaMenu = ({ sections }: { sections: MegaMenuSection[] }) => {
 };
 
 export default function Header() {
+  const { currentLanguage } = useLanguage();
+  const { t } = useTranslation(currentLanguage);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -145,12 +150,12 @@ export default function Header() {
           // Use SVG if available, otherwise use image or fallback
           const imageUrl = make.svgUrl || make.imageUrl || `/brands/${make.name.toLowerCase()}.svg`;
           
-          return {
-            name: make.name,
-            href: `/cars?make=${encodeURIComponent(make.name)}`,
-            icon: '🚗', // Default icon as fallback
-            imageUrl: imageUrl // Add image URL for brand logo
-          };
+                      return {
+              name: make.name,
+              href: `/${currentLanguage}/cars?make=${encodeURIComponent(make.name)}`,
+              icon: '🚗', // Default icon as fallback
+              imageUrl: imageUrl // Add image URL for brand logo
+            };
         }).slice(0, 8);
         
         // Map types data to menu items - limit to 8
@@ -168,7 +173,7 @@ export default function Header() {
           
           return {
             name: type.name,
-            href: `/cars?bodyType=${encodeURIComponent(type.name)}`,
+            href: `/${currentLanguage}/cars?bodyType=${encodeURIComponent(type.name)}`,
             icon
           };
         }).slice(0, 8);
@@ -190,7 +195,7 @@ export default function Header() {
           
           return {
             name: location.name,
-            href: `/cars?location=${encodeURIComponent(location.name)}`,
+            href: `/${currentLanguage}/cars?location=${encodeURIComponent(location.name)}`,
             icon: flag
           };
         }).slice(0, 8);
@@ -207,50 +212,59 @@ export default function Header() {
     };
     
     fetchMenuData();
-  }, []);
+  }, [currentLanguage]);
 
   // Create dynamic nav items with fetched data
   const navItems: NavItem[] = [
-    { name: 'Home', href: '/' },
+    { name: t('navigation.home'), href: `/${currentLanguage}` },
     { 
-      name: 'Cars', 
-      href: '/cars',
+      name: t('navigation.cars'), 
+      href: `/${currentLanguage}/cars`,
       megaMenu: true,
       sections: [
         {
-          title: 'Search By Make',
+          title: t('brands.title'),
           items: isLoading ? [
-            { name: 'Toyota', href: '/cars?make=Toyota', icon: '🚗', imageUrl: '/brands/toyota.svg' },
-            { name: 'Honda', href: '/cars?make=Honda', icon: '🚗', imageUrl: '/brands/honda.svg' },
-            { name: 'Nissan', href: '/cars?make=Nissan', icon: '🚗', imageUrl: '/brands/nissan.svg' },
-          ] : makes,
-          viewAll: { name: 'View All Makes', href: '/cars?filter=makes' }
+            { name: 'Toyota', href: `/${currentLanguage}/cars?make=Toyota`, icon: '🚗', imageUrl: '/brands/toyota.svg' },
+            { name: 'Honda', href: `/${currentLanguage}/cars?make=Honda`, icon: '🚗', imageUrl: '/brands/honda.svg' },
+            { name: 'Nissan', href: `/${currentLanguage}/cars?make=Nissan`, icon: '🚗', imageUrl: '/brands/nissan.svg' },
+          ] : makes.map(make => ({
+            ...make,
+            href: `/${currentLanguage}/cars?make=${encodeURIComponent(make.name.replace(`/${currentLanguage}/cars?make=`, ''))}`
+          })),
+          viewAll: { name: t('brands.viewAll'), href: `/${currentLanguage}/cars?filter=makes` }
         },
         {
-          title: 'Search By Type',
+          title: t('search.bodyType'),
           items: isLoading ? [
-            { name: 'Sedan', href: '/cars?bodyType=Sedan', icon: '🚘' },
-            { name: 'SUV', href: '/cars?bodyType=SUV', icon: '🚙' },
-            { name: 'Truck', href: '/cars?bodyType=Truck', icon: '🚚' },
-          ] : vehicleTypes,
-          viewAll: { name: 'View All Types', href: '/cars?filter=types' }
+            { name: 'Sedan', href: `/${currentLanguage}/cars?bodyType=Sedan`, icon: '🚘' },
+            { name: 'SUV', href: `/${currentLanguage}/cars?bodyType=SUV`, icon: '🚙' },
+            { name: 'Truck', href: `/${currentLanguage}/cars?bodyType=Truck`, icon: '🚚' },
+          ] : vehicleTypes.map(type => ({
+            ...type,
+            href: `/${currentLanguage}/cars?bodyType=${encodeURIComponent(type.name.replace(`/${currentLanguage}/cars?bodyType=`, ''))}`
+          })),
+          viewAll: { name: t('search.allBodyTypes'), href: `/${currentLanguage}/cars?filter=types` }
         },
         {
-          title: 'Country List',
+          title: t('shipping.fromPort'),
           items: isLoading ? [
-            { name: 'Japan', href: '/cars?location=Japan', icon: '🇯🇵' },
-            { name: 'Singapore', href: '/cars?location=Singapore', icon: '🇸🇬' },
-            { name: 'Dubai', href: '/cars?location=Dubai', icon: '🇦🇪' },
-          ] : locations,
-          viewAll: { name: 'View All Countries', href: '/cars?filter=countries' }
+            { name: 'Japan', href: `/${currentLanguage}/cars?location=Japan`, icon: '🇯🇵' },
+            { name: 'Singapore', href: `/${currentLanguage}/cars?location=Singapore`, icon: '🇸🇬' },
+            { name: 'Dubai', href: `/${currentLanguage}/cars?location=Dubai`, icon: '🇦🇪' },
+          ] : locations.map(location => ({
+            ...location,
+            href: `/${currentLanguage}/cars?location=${encodeURIComponent(location.name.replace(`/${currentLanguage}/cars?location=`, ''))}`
+          })),
+          viewAll: { name: t('shipping.viewSchedule'), href: `/${currentLanguage}/cars?filter=countries` }
         }
       ]
     },
-    { name: 'Auction', href: '/auction' },
-    { name: 'About Us', href: '/about' },
-    { name: 'Banking Info', href: '/banking' },
-    { name: 'Contact', href: '/contact' },
-    { name: 'FAQ', href: '/faq' },
+    { name: t('navigation.auction'), href: `/${currentLanguage}/auction` },
+    { name: t('navigation.about'), href: `/${currentLanguage}/about` },
+    { name: t('navigation.banking'), href: `/${currentLanguage}/banking` },
+    { name: t('navigation.contact'), href: `/${currentLanguage}/contact` },
+    { name: t('navigation.faq'), href: `/${currentLanguage}/faq` },
   ];
 
   return (
@@ -262,37 +276,23 @@ export default function Header() {
             <div className="flex items-center space-x-6 text-sm">
               <div className="flex items-center">
                 <MapPin size={14} className="mr-1.5" />
-                <span>Aichi Ken Nagoya Shi Minato Ku Nishifukuta 1-1506</span>
+                <span>{t('footer.address')}</span>
               </div>
               <div className="flex items-center">
                 <Phone size={14} className="mr-1.5" />
-                <span>+81 052 387 9772</span>
+                <span>{t('footer.phone')}</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="link" size="sm" className="text-white p-0 flex items-center">
-                    <Globe size={14} className="mr-1.5" />
-                    <span>English</span>
-                    <ChevronDown size={14} className="ml-1" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>English</DropdownMenuItem>
-                  <DropdownMenuItem>Japanese</DropdownMenuItem>
-                  <DropdownMenuItem>Arabic</DropdownMenuItem>
-                  <DropdownMenuItem>Spanish</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <LanguageSwitcher />
               
               <div className="h-4 w-px bg-white/30"></div>
               
-              <Link href="/login" className="text-sm hover:text-gray-200 transition-colors">
-                Login
+              <Link href={`/${currentLanguage}/login`} className="text-sm hover:text-gray-200 transition-colors">
+                {t('navigation.login')}
               </Link>
-              <Link href="/register" className="text-sm hover:text-gray-200 transition-colors">
-                Register
+              <Link href={`/${currentLanguage}/register`} className="text-sm hover:text-gray-200 transition-colors">
+                {t('navigation.register')}
               </Link>
             </div>
           </div>
@@ -308,7 +308,7 @@ export default function Header() {
         <div className="max-w-[1400px] mx-auto px-4">
           <div className="flex justify-between items-center">
             {/* Logo */}
-            <Link href="/" className="flex items-center">
+            <Link href={`/${currentLanguage}`} className="flex items-center">
               <div className="bg-red-600 text-white rounded-md w-8 h-8 flex items-center justify-center mr-2">
                 <span className="font-bold">SS</span>
               </div>
@@ -352,14 +352,13 @@ export default function Header() {
                                       className="flex items-center py-1.5 hover:text-red-600 transition-colors"
                                       onClick={() => setActiveDropdown(null)}
                                     >
-                                      {section.title === 'Search By Make' && subItem.imageUrl ? (
+                                      {section.title === t('brands.title') && subItem.imageUrl ? (
                                         <div className="w-6 h-6 mr-2 flex items-center justify-center">
                                           <img 
                                             src={subItem.imageUrl}
                                             alt={subItem.name}
                                             className="max-w-full max-h-full object-contain"
                                             onError={(e) => {
-                                              // Fallback to emoji if image fails to load
                                               e.currentTarget.style.display = 'none';
                                               const nextElement = e.currentTarget.nextSibling as HTMLElement;
                                               if (nextElement) nextElement.style.display = 'block';
@@ -406,21 +405,17 @@ export default function Header() {
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center space-x-3">
-              <Button variant="outline" size="sm" className="rounded-full w-10 h-10 p-0">
-                <Search size={18} />
-              </Button>
-              
               <Button 
                 asChild
                 className="bg-red-600 hover:bg-red-700 text-white rounded-md"
               >
-                <Link href="/contact" className="flex items-center">
-                  Get a Quote
+                <Link href={`/${currentLanguage}/contact`} className="flex items-center">
+                  {t('navigation.getQuote')}
                 </Link>
               </Button>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="icon" className="md:hidden">
@@ -484,14 +479,13 @@ export default function Header() {
                                               className="flex items-center py-1.5 text-base text-gray-600 hover:text-red-600"
                                               onClick={() => setIsMobileMenuOpen(false)}
                                             >
-                                              {section.title === 'Search By Make' && subItem.imageUrl ? (
+                                              {section.title === t('brands.title') && subItem.imageUrl ? (
                                                 <div className="w-6 h-6 mr-2 flex items-center justify-center">
                                                   <img 
                                                     src={subItem.imageUrl}
                                                     alt={subItem.name}
                                                     className="max-w-full max-h-full object-contain"
                                                     onError={(e) => {
-                                                      // Fallback to emoji if image fails to load
                                                       e.currentTarget.style.display = 'none';
                                                       const nextElement = e.currentTarget.nextSibling as HTMLElement;
                                                       if (nextElement) nextElement.style.display = 'block';
@@ -512,7 +506,7 @@ export default function Header() {
                                                 className="flex items-center py-1.5 text-blue-600 hover:text-blue-800"
                                                 onClick={() => setIsMobileMenuOpen(false)}
                                               >
-                                                <span>View All {section.title.split(' ').pop()}</span>
+                                                <span>{section.viewAll.name}</span>
                                               </Link>
                                             </div>
                                           )}
@@ -537,19 +531,15 @@ export default function Header() {
                     </nav>
                     
                     <div className="mt-8 border-t border-gray-100 pt-6">
-                      <p className="text-sm text-gray-500 mb-2 px-2">Language</p>
-                      <div className="flex flex-wrap gap-2 px-2">
-                        <Button variant="outline" size="sm">English</Button>
-                        <Button variant="outline" size="sm">Japanese</Button>
-                        <Button variant="outline" size="sm">Arabic</Button>
-                        <Button variant="outline" size="sm">Spanish</Button>
-                      </div>
+                      <LanguageSwitcher variant="mobile" />
                     </div>
                   </div>
                   
                   <div className="p-4 border-t border-gray-100">
                     <Button asChild className="w-full bg-red-600 hover:bg-red-700">
-                      <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)}>Get a Quote</Link>
+                      <Link href={`/${currentLanguage}/contact`} onClick={() => setIsMobileMenuOpen(false)}>
+                        {t('navigation.getQuote')}
+                      </Link>
                     </Button>
                   </div>
                 </div>

@@ -7,12 +7,16 @@ import { Search, Filter, ChevronRight, Car, Calendar, CreditCard, Gauge, Loader2
 import { motion } from "framer-motion";
 import { vehicleAPI } from '@/services/api';
 import { getOptionsByCategory, Option } from '@/services/optionsAPI';
+import { useTranslation } from '@/app/i18n/client';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 interface SearchFormProps {
   className?: string;
 }
 
 export default function SearchForm({ className }: SearchFormProps) {
+  const { currentLanguage } = useLanguage();
+  const { t } = useTranslation(currentLanguage);
   const router = useRouter();
   const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
   const [searchParams, setSearchParams] = useState({
@@ -141,7 +145,7 @@ export default function SearchForm({ className }: SearchFormProps) {
       }
     });
     
-    router.push(`/cars?${params.toString()}`);
+    router.push(`/${currentLanguage}/cars?${params.toString()}`);
   };
 
   const toggleAdvancedSearch = () => {
@@ -167,7 +171,7 @@ export default function SearchForm({ className }: SearchFormProps) {
     return (
       <div className={`bg-gradient-to-r from-[#1a3d50] to-[#2c5878] rounded-lg shadow-lg overflow-hidden ${className} p-8 flex justify-center items-center`}>
         <Loader2 className="h-8 w-8 animate-spin text-white" />
-        <span className="ml-2 text-white">Loading search options...</span>
+        <span className="ml-2 text-white">{t('common.loading')}</span>
       </div>
     );
   }
@@ -177,7 +181,7 @@ export default function SearchForm({ className }: SearchFormProps) {
       <div className="bg-[#162e3d] px-5 py-3 flex items-center justify-between">
         <div className="flex items-center text-white">
           <Search className="mr-2 h-5 w-5 text-blue-300" />
-          <h2 className="text-lg font-medium">Find Your Perfect Car</h2>
+          <h2 className="text-lg font-medium">{t('search.title')}</h2>
         </div>
         <button 
           onClick={toggleAdvancedSearch}
@@ -207,13 +211,13 @@ export default function SearchForm({ className }: SearchFormProps) {
                 onChange={handleChange}
                 className="w-full rounded-md border border-gray-200 py-2.5 pl-10 pr-8 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               >
-                <option value="">Select Make</option>
+                <option value="">{t('search.selectMake')}</option>
                 {makes.map(make => (
                   <option key={make._id} value={make.name}>{make.name}</option>
                 ))}
               </select>
               <label htmlFor="make" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
-                Make
+                {t('search.make')}
               </label>
             </motion.div>
             
@@ -229,9 +233,9 @@ export default function SearchForm({ className }: SearchFormProps) {
                 className="w-full rounded-md border border-gray-200 py-2.5 pl-10 pr-8 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 disabled={!searchParams.make || isLoadingModels}
               >
-                <option value="">Select Model</option>
+                <option value="">{t('search.selectModel')}</option>
                 {isLoadingModels ? (
-                  <option value="" disabled>Loading models...</option>
+                  <option value="" disabled>{t('common.loading')}</option>
                 ) : (
                   models.map(model => (
                     <option key={model.name} value={model.name}>
@@ -241,7 +245,7 @@ export default function SearchForm({ className }: SearchFormProps) {
                 )}
               </select>
               <label htmlFor="model" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
-                Model
+                {t('search.model')}
               </label>
               {isLoadingModels && (
                 <div className="absolute right-8 top-1/2 -translate-y-1/2">
@@ -261,7 +265,7 @@ export default function SearchForm({ className }: SearchFormProps) {
                 onChange={handleChange}
                 className="w-full rounded-md border border-gray-200 py-2.5 pl-10 pr-8 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               >
-                <option value="">Any Year</option>
+                <option value="">{t('search.selectYear')}</option>
                 {Array.from({ length: 24 }, (_, i) => 2000 + i).map(year => (
                   <option key={year} value={year.toString()}>
                     {year}
@@ -269,7 +273,7 @@ export default function SearchForm({ className }: SearchFormProps) {
                 ))}
               </select>
               <label htmlFor="yearFrom" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
-                Year From
+                {t('search.year')}
               </label>
             </motion.div>
           </div>
@@ -293,13 +297,13 @@ export default function SearchForm({ className }: SearchFormProps) {
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-200 py-2.5 pl-10 pr-8 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 >
-                  <option value="">Any Body Type</option>
+                  <option value="">{t('search.selectBodyType')}</option>
                   {bodyTypes.map(type => (
                     <option key={type._id} value={type.name}>{type.name}</option>
                   ))}
                 </select>
                 <label htmlFor="bodyType" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
-                  Body Type
+                  {t('search.bodyType')}
                 </label>
               </div>
               
@@ -335,7 +339,7 @@ export default function SearchForm({ className }: SearchFormProps) {
                   onChange={handleChange}
                   className="w-full rounded-md border border-gray-200 py-2.5 pl-10 pr-8 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 >
-                  <option value="">Min Price</option>
+                  <option value="">{t('search.priceRange')}</option>
                   <option value="5000">$5,000</option>
                   <option value="10000">$10,000</option>
                   <option value="15000">$15,000</option>
@@ -344,7 +348,7 @@ export default function SearchForm({ className }: SearchFormProps) {
                   <option value="30000">$30,000</option>
                 </select>
                 <label htmlFor="minPrice" className="absolute -top-2 left-2 text-xs font-medium bg-white px-1 text-gray-600">
-                  Min Price
+                  {t('search.priceRange')}
                 </label>
               </div>
             </motion.div>
@@ -371,7 +375,7 @@ export default function SearchForm({ className }: SearchFormProps) {
                 type="submit" 
                 className="bg-red-600 hover:bg-red-700 text-white text-sm py-2 px-6 rounded-md flex items-center"
               >
-                Search Now
+                {t('search.searchVehicles')}
                 <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </motion.div>

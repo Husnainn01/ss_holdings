@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { motion, Variants } from "framer-motion";
 import { ArrowRight } from "lucide-react";
+import { useTranslation } from '@/app/i18n/client';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 interface HeroButton {
   text: string;
@@ -23,24 +25,33 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({
-  title = "Export Quality Vehicles Worldwide",
-  subtitle = "SS Holdings connects you with premium vehicles for export to any destination. Browse our inventory and find your perfect car today.",
+  title,
+  subtitle,
   imageUrl = "/hero-section/home-page.png",
   imageAlt = "Luxury car export",
-  buttons = [
-    {
-      text: "Browse Our Cars",
-      href: "/cars",
-      variant: "default"
-    },
-    {
-      text: "Request a Quote",
-      href: "/contact",
-      variant: "outline"
-    }
-  ],
+  buttons,
   height = "h-[400px]"
 }: HeroSectionProps) {
+  const { currentLanguage } = useLanguage();
+  const { t } = useTranslation(currentLanguage);
+  
+  // Use translations if title/subtitle not provided via props
+  const heroTitle = title || t('hero.title');
+  const heroSubtitle = subtitle || t('hero.subtitle');
+  
+  // Use translations for buttons if not provided via props
+  const heroButtons = buttons || [
+    {
+      text: t('hero.browseCars'),
+      href: "/cars",
+      variant: "default" as const
+    },
+    {
+      text: t('hero.requestQuote'),
+      href: "/contact",
+      variant: "outline" as const
+    }
+  ];
   const [scrollY, setScrollY] = useState(0);
   const isMounted = useRef(true);
   
@@ -122,21 +133,21 @@ export default function HeroSection({
             variants={itemVariants}
             className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4"
           >
-            {title}
+            {heroTitle}
           </motion.h1>
           
           <motion.p 
             variants={itemVariants}
             className="text-lg md:text-xl mb-6 text-gray-300"
           >
-            {subtitle}
+            {heroSubtitle}
           </motion.p>
           
           <motion.div 
             variants={itemVariants}
             className="flex flex-wrap gap-4"
           >
-            {buttons.map((button, index) => (
+            {heroButtons.map((button, index) => (
               button.variant === 'default' ? (
                 <motion.div 
                   key={index} 

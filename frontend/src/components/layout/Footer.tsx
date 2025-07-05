@@ -15,8 +15,12 @@ import {
   Send,
   Youtube
 } from 'lucide-react';
+import { useTranslation } from '@/app/i18n/client';
+import { useLanguage } from '@/components/providers/LanguageProvider';
 
 export default function Footer() {
+  const { currentLanguage } = useLanguage();
+  const { t } = useTranslation(currentLanguage);
   const currentYear = new Date().getFullYear();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [email, setEmail] = useState('');
@@ -72,9 +76,7 @@ export default function Footer() {
             </div>
             
             <p className="text-gray-400 text-sm mb-6">
-              Your trusted partner for quality car exports worldwide. We connect
-              buyers with their dream vehicles across the globe with reliable service
-              and transparent processes.
+              {t('footer.description')}
             </p>
             
             <div className="flex items-center mb-6">
@@ -102,17 +104,17 @@ export default function Footer() {
           <div className="md:col-span-2">
             <h3 className="font-bold mb-6 flex items-center">
               <span className="w-5 h-0.5 bg-red-600 mr-2"></span>
-              Quick Links
+              {t('footer.quickLinks')}
             </h3>
             <ul className="space-y-3">
-              <li><Link href="/" className="text-gray-400 hover:text-white transition-colors">Home</Link></li>
-              <li><Link href="/cars" className="text-gray-400 hover:text-white transition-colors">Our Cars</Link></li>
-              <li><Link href="/auction" className="text-gray-400 hover:text-white transition-colors">Auction</Link></li>
-              <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
-              <li><Link href="/banking" className="text-gray-400 hover:text-white transition-colors">Banking Info</Link></li>
-              <li><Link href="/faq" className="text-gray-400 hover:text-white transition-colors">FAQ</Link></li>
-              <li><Link href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</Link></li>
-              <li><Link href="/sitemap" className="text-gray-400 hover:text-white transition-colors">Site Map</Link></li>
+              <li><Link href={`/${currentLanguage}`} className="text-gray-400 hover:text-white transition-colors">{t('navigation.home')}</Link></li>
+              <li><Link href={`/${currentLanguage}/cars`} className="text-gray-400 hover:text-white transition-colors">{t('navigation.cars')}</Link></li>
+              <li><Link href={`/${currentLanguage}/auction`} className="text-gray-400 hover:text-white transition-colors">{t('navigation.auction')}</Link></li>
+              <li><Link href={`/${currentLanguage}/about`} className="text-gray-400 hover:text-white transition-colors">{t('navigation.about')}</Link></li>
+              <li><Link href={`/${currentLanguage}/banking`} className="text-gray-400 hover:text-white transition-colors">{t('navigation.banking')}</Link></li>
+              <li><Link href={`/${currentLanguage}/faq`} className="text-gray-400 hover:text-white transition-colors">{t('navigation.faq')}</Link></li>
+              <li><Link href={`/${currentLanguage}/contact`} className="text-gray-400 hover:text-white transition-colors">{t('navigation.contact')}</Link></li>
+              <li><Link href={`/${currentLanguage}/sitemap`} className="text-gray-400 hover:text-white transition-colors">Site Map</Link></li>
             </ul>
           </div>
           
@@ -120,14 +122,14 @@ export default function Footer() {
           <div className="md:col-span-2">
             <h3 className="font-bold mb-6 flex items-center">
               <span className="w-5 h-0.5 bg-red-600 mr-2"></span>
-              Car Categories
+              {t('footer.carCategories')}
             </h3>
             <ul className="space-y-3">
-              <li><Link href="/cars?type=sedan" className="text-gray-400 hover:text-white transition-colors">Sedans</Link></li>
-              <li><Link href="/cars?type=suv" className="text-gray-400 hover:text-white transition-colors">SUVs</Link></li>
-              <li><Link href="/cars?type=luxury" className="text-gray-400 hover:text-white transition-colors">Luxury Cars</Link></li>
-              <li><Link href="/cars?type=hybrid" className="text-gray-400 hover:text-white transition-colors">Hybrid & Electric</Link></li>
-              <li><Link href="/cars?type=commercial" className="text-gray-400 hover:text-white transition-colors">Commercial Vehicles</Link></li>
+              <li><Link href={`/${currentLanguage}/cars?type=sedan`} className="text-gray-400 hover:text-white transition-colors">Sedans</Link></li>
+              <li><Link href={`/${currentLanguage}/cars?type=suv`} className="text-gray-400 hover:text-white transition-colors">SUVs</Link></li>
+              <li><Link href={`/${currentLanguage}/cars?type=luxury`} className="text-gray-400 hover:text-white transition-colors">Luxury Cars</Link></li>
+              <li><Link href={`/${currentLanguage}/cars?type=hybrid`} className="text-gray-400 hover:text-white transition-colors">Hybrid & Electric</Link></li>
+              <li><Link href={`/${currentLanguage}/cars?type=commercial`} className="text-gray-400 hover:text-white transition-colors">Commercial Vehicles</Link></li>
             </ul>
           </div>
           
@@ -166,7 +168,7 @@ export default function Footer() {
             <MapPin size={20} className="text-red-600 mr-3" />
             <div>
               <p className="font-medium">Our Location</p>
-              <p className="text-gray-400 text-sm">Aichi Ken Nagoya Shi Minato Ku Nishifukuta 1-1506</p>
+              <p className="text-gray-400 text-sm">{t('footer.address')}</p>
             </div>
           </div>
           
@@ -174,7 +176,7 @@ export default function Footer() {
             <Phone size={20} className="text-red-600 mr-3" />
             <div>
               <p className="font-medium">Call Us 24/7</p>
-              <p className="text-gray-400 text-sm">+81 052 387 9772</p>
+              <p className="text-gray-400 text-sm">{t('footer.phone')}</p>
             </div>
           </div>
           
@@ -182,7 +184,7 @@ export default function Footer() {
             <Mail size={20} className="text-red-600 mr-3" />
             <div>
               <p className="font-medium">Email Us</p>
-              <p className="text-gray-400 text-sm">info@ss.holdings</p>
+              <p className="text-gray-400 text-sm">{t('footer.email')}</p>
             </div>
           </div>
         </div>
@@ -190,20 +192,20 @@ export default function Footer() {
         {/* Copyright */}
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
-            <p className="text-gray-400 text-sm">© {currentYear} SS Holdings. All rights reserved.</p>
+            <p className="text-gray-400 text-sm">{t('footer.copyright', { year: currentYear })}</p>
           </div>
           
           <div className="flex space-x-6">
-            <Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</Link>
-            <Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Terms of Service</Link>
-            <Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Shipping Policy</Link>
-            <Link href="/sitemap" className="text-gray-400 hover:text-white text-sm transition-colors">Site Map</Link>
+            <Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">{t('footer.privacyPolicy')}</Link>
+            <Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">{t('footer.termsOfService')}</Link>
+            <Link href="#" className="text-gray-400 hover:text-white text-sm transition-colors">{t('footer.shippingPolicy')}</Link>
+            <Link href={`/${currentLanguage}/sitemap`} className="text-gray-400 hover:text-white text-sm transition-colors">Site Map</Link>
           </div>
         </div>
         
         {/* Company Description */}
         <p className="text-gray-500 text-xs text-center mt-8">
-          SS Holdings specializes in exporting premium vehicles to meet global demands. Our team connects buyers with high-quality vehicles from manufacturers across the world.
+          {t('footer.description')}
         </p>
       </div>
       
