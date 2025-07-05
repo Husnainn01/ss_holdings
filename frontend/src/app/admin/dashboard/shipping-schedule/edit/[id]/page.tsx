@@ -1,15 +1,17 @@
 import ShippingScheduleForm from '@/components/admin/ShippingScheduleForm';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function EditShippingSchedulePage({ params }: PageProps) {
+export default async function EditShippingSchedulePage({ params }: PageProps) {
+  const { id } = await params;
+  
   return (
     <ShippingScheduleForm 
-      scheduleId={params.id} 
+      scheduleId={id} 
       isEditMode={true}
     />
   );

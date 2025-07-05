@@ -177,10 +177,10 @@ export default function AboutPage() {
                   transition={{ duration: 0.3 }}
                 >
                   <Image
-                    src="https://placehold.co/600x400/png?text=Our+Story"
+                    src="/hero-section/ss.png"
                     alt="Our Story"
                     width={600}
-                    height={400}
+                    height={300}
                     className="w-full h-auto"
                   />
                 </motion.div>
