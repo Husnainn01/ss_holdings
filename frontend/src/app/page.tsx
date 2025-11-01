@@ -1,6 +1,10 @@
-import { redirect } from 'next/navigation';
-import { fallbackLng } from './i18n/settings';
+import HomePageClient from '@/components/home/HomePageClient';
+import MainLayout from './layout-main';
 
 export default function RootPage() {
-  redirect(`/${fallbackLng}`);
+  return (
+    <MainLayout>
+      <HomePageClient />
+    </MainLayout>
+  );
 }

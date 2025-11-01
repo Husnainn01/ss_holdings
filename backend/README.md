@@ -31,8 +31,17 @@ src/
    ```
    npm install
    ```
-3. Create a `.env` file based on `.env.example` with your configuration
-4. Run the development server:
+3. Create a `.env` file based on `.env.example` with your configuration:
+   ```
+   cp .env.example .env
+   ```
+4. Edit the `.env` file and update the values with your actual configuration:
+   - Set `MONGODB_URI` to your MongoDB connection string
+   - Set `JWT_SECRET` to a secure random string
+   - Set `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`, and `CLOUDFLARE_IMAGES_ENDPOINT` if you're using Cloudflare
+   - Set `TURNSTILE_SECRET_KEY` if you're using Cloudflare Turnstile
+   - Set `SFTP_HOST`, `SFTP_PORT`, `SFTP_USERNAME`, and `SFTP_PASSWORD` for SFTP access
+5. Run the development server:
    ```
    npm run dev
    ```
@@ -103,12 +112,37 @@ Both components use a fallback mechanism if the image fails to load.
 
 ## Environment Variables
 
-- `PORT` - Server port (default: 5000)
+### Server Configuration
+- `PORT` - Server port (default: 5001 for development, 8080 for production)
 - `NODE_ENV` - Environment (development, production)
+
+### Database Configuration
 - `MONGODB_URI` - MongoDB connection string
+
+### Authentication
 - `JWT_SECRET` - Secret key for JWT
 - `JWT_EXPIRATION` - JWT expiration time
-- `CORS_ORIGIN` - Allowed CORS origin
+
+### CORS Configuration
+- `CORS_ORIGIN` - Allowed CORS origins (comma-separated list)
+
+### Cloudflare Configuration
+- `CLOUDFLARE_ACCOUNT_ID` - Cloudflare account ID
+- `CLOUDFLARE_API_TOKEN` - Cloudflare API token
+- `CLOUDFLARE_IMAGES_ENDPOINT` - Cloudflare images endpoint
+
+### CDN Configuration
+- `CDN_URL` - CDN URL (default: https://cdn.ss.holdings)
+- `CDN_REMOTE_PATH` - Remote server path for CDN files (default: /home/ssholdings/public_html/cdn.ss.holdings)
+
+### Turnstile Configuration
+- `TURNSTILE_SECRET_KEY` - Cloudflare Turnstile secret key
+
+### SFTP Configuration
+- `SFTP_HOST` - SFTP server hostname
+- `SFTP_PORT` - SFTP server port (default: 22)
+- `SFTP_USERNAME` - SFTP username
+- `SFTP_PASSWORD` - SFTP password
 
 ## Database Seeding
 

@@ -5,20 +5,20 @@ import * as crypto from 'crypto';
 
 // FTP configuration
 const FTP_CONFIG = {
-  host: '136.0.157.42',
+  host: 'mail.ss.holdings',
   user: 'ssholdings',
-  password: 'ka;M;QK}3}Nrxza3',
+  password: 'QQ?pBRTj$Zm4v57TDMf6d3dv&m',
   secure: false, // Set to true if using FTPS
   port: 22, // Default FTP port
   timeout: 30000 // 30 seconds timeout
 };
 
 // Remote directory path on the server
-const REMOTE_BASE_PATH = '/home/ssholdings/public_html';
-const REMOTE_UPLOADS_PATH = `${REMOTE_BASE_PATH}/uploads`;
+const REMOTE_BASE_PATH = '/home/ssholdings/public_html/cdn.ss.holdings';
+const REMOTE_UPLOADS_PATH = `${REMOTE_BASE_PATH}/images`;
 
 // Public URL base for accessing the uploaded files
-const PUBLIC_URL_BASE = 'https://ss.holdings/uploads';
+const PUBLIC_URL_BASE = 'https://cdn.ss.holdings/images';
 
 /**
  * Upload a file to the FTP server

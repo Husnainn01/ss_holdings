@@ -17,6 +17,7 @@ import {
   LineElement,
 } from 'chart.js';
 import { dashboardAPI } from '@/services/api';
+import config from "@/config";
 
 interface StatsCard {
   title: string;
@@ -149,8 +150,8 @@ export default function Dashboard() {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     datasets: [
       {
-        label: "SFTP Usage (GB)",
-        data: [12, 19, 8, 15, 10, 7, 14], // This can be real data when you implement SFTP monitoring
+        label: `SFTP Usage (${config.sftp.host})`,
+        data: dashboardData.sftpUsageStats?.chartData?.data || [0, 0, 0, 0, 0, 0, 0], // Use real data from API or fallback to zeros
         backgroundColor: "#8A0000",
       },
     ],
@@ -290,6 +291,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl shadow-sm p-4">
           <h3 className="font-semibold text-gray-900 mb-2 text-sm">SFTP Server Usage</h3>
+          <div className="text-xs text-gray-500 mb-2">
+            Host: {config.sftp.host} | Port: {config.sftp.port} | Username: {config.sftp.username}
+          </div>
           <Bar data={sftpUsageData} options={{ responsive: true, plugins: { legend: { display: false } } }} />
         </div>
         <div className="bg-white rounded-xl shadow-sm p-4">

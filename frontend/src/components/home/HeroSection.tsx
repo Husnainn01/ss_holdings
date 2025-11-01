@@ -6,8 +6,7 @@ import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { motion, Variants } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import { useTranslation } from '@/app/i18n/client';
-import { useLanguage } from '@/components/providers/LanguageProvider';
+// Removed language-related imports
 
 interface HeroButton {
   text: string;
@@ -32,22 +31,21 @@ export default function HeroSection({
   buttons,
   height = "h-[400px]"
 }: HeroSectionProps) {
-  const { currentLanguage } = useLanguage();
-  const { t } = useTranslation(currentLanguage);
+  const currentLanguage = 'en';
   
-  // Use translations if title/subtitle not provided via props
-  const heroTitle = title || t('hero.title');
-  const heroSubtitle = subtitle || t('hero.subtitle');
+  // Use hardcoded values if title/subtitle not provided via props
+  const heroTitle = title || "Premium Vehicle Export Worldwide";
+  const heroSubtitle = subtitle || "Find and export your dream car with our trusted global shipping service";
   
-  // Use translations for buttons if not provided via props
+  // Use hardcoded values for buttons if not provided via props
   const heroButtons = buttons || [
     {
-      text: t('hero.browseCars'),
+      text: "Browse Our Cars",
       href: "/cars",
       variant: "default" as const
     },
     {
-      text: t('hero.requestQuote'),
+      text: "Request a Quote",
       href: "/contact",
       variant: "outline" as const
     }
@@ -56,12 +54,16 @@ export default function HeroSection({
   const isMounted = useRef(true);
   
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     const handleScroll = () => {
       if (isMounted.current) {
         setScrollY(window.scrollY);
       }
     };
     
+    // Safe event listener
     window.addEventListener("scroll", handleScroll);
     
     return () => {

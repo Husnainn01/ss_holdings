@@ -1,13 +1,17 @@
+import '../lib/mockLocalStorage' // Import mock localStorage first
+import '../lib/mockWindow' // Import mock window.location
+import '../lib/debugLocalStorage' // Import debug helper
 import './globals.css'
 import type { Metadata } from 'next'
 import { raleway } from './fonts'
+import { SITE_NAME, SITE_DESCRIPTION } from '@/config'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | SS Holdings',
-    default: 'SS Holdings - Premium Car Export Worldwide'
+    template: `%s | ${SITE_NAME}`,
+    default: `${SITE_NAME} - Premium Car Export Worldwide`
   },
-  description: 'SS Holdings specializes in exporting high-quality vehicles to customers worldwide.',
+  description: SITE_DESCRIPTION,
   robots: {
     index: true,
     follow: true,
@@ -22,7 +26,7 @@ export const metadata: Metadata = {
 }
 
 // This is a minimal root layout that doesn't include Header or Footer
-// The actual site layout is in (main)/layout.tsx
+// The actual site layout is applied in route groups: (main) and (routes)
 // Admin routes have their own root layout in /admin/layout.tsx
 export default function RootLayout({
   children,

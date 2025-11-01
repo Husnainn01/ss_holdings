@@ -18,6 +18,7 @@ import {
   Ship,
 } from "lucide-react";
 import { authAPI } from "@/services/api";
+import { getItem, removeItem } from "@/lib/localStorage";
 
 interface SidebarItem {
   name: string;
@@ -46,7 +47,7 @@ export default function Sidebar() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const token = localStorage.getItem('adminAuth');
+        const token = getItem('adminAuth');
         if (!token) {
           router.push('/admin/login');
           return;
@@ -58,7 +59,7 @@ export default function Sidebar() {
       } catch (error) {
         console.error('Error fetching user data:', error);
         // If auth fails, redirect to login
-        localStorage.removeItem('adminAuth');
+        removeItem('adminAuth');
         router.push('/admin/login');
       }
     };
@@ -151,7 +152,7 @@ export default function Sidebar() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("adminAuth");
+    removeItem("adminAuth");
     router.push('/admin/login');
   };
 

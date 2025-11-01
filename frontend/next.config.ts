@@ -1,5 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Add webpack configuration for polyfills
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Server-side polyfills
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        localStorage: false,
+        sessionStorage: false,
+      };
+    }
+    return config;
+  },
   reactStrictMode: true,
   images: {
     domains: [

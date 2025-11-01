@@ -6,8 +6,7 @@ import CarCard from '@/components/car/CarCard';
 import { ArrowRight, Clock, RefreshCw } from 'lucide-react';
 import { motion, Variants } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useTranslation } from '@/app/i18n/client';
-import { useLanguage } from '@/components/providers/LanguageProvider';
+// Removed language-related imports
 
 interface Car {
   id: string;
@@ -34,13 +33,24 @@ interface RecentlyAddedProps {
   showViewMore?: boolean;
 }
 
+// Simple translation function that returns hardcoded values
+const t = (key: string) => {
+  const translations: Record<string, string> = {
+    'recentlyAdded.title': 'Recently Added Vehicles',
+    'recentlyAdded.subtitle': 'Latest vehicles added to our inventory',
+    'recentlyAdded.viewAllVehicles': 'View All Vehicles',
+    'recentlyAdded.noVehicles': 'No vehicles available at the moment'
+  };
+  
+  return translations[key] || key;
+};
+
 export default function RecentlyAdded({ 
   cars = [], 
   title,
   showViewMore = true 
 }: RecentlyAddedProps) {
-  const { currentLanguage } = useLanguage();
-  const { t } = useTranslation(currentLanguage);
+  const currentLanguage = 'en';
   const [isHovered, setIsHovered] = useState(false);
   
   // Animation variants
@@ -67,7 +77,13 @@ export default function RecentlyAdded({
     }
   };
 
+  // Enhanced debugging
   console.log('RecentlyAdded component received cars:', cars);
+  console.log('RecentlyAdded component details:', {
+    carsLength: cars?.length || 0,
+    hasData: Array.isArray(cars) && cars.length > 0,
+    firstCar: cars && cars.length > 0 ? cars[0] : null
+  });
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -93,7 +109,7 @@ export default function RecentlyAdded({
               size="sm"
               className="bg-white/10 hover:bg-white/20 text-white border-0 backdrop-blur-sm"
             >
-              <Link href={`/${currentLanguage}/cars`} className="flex items-center gap-1 text-xs font-medium">
+              <Link href="/cars" className="flex items-center gap-1 text-xs font-medium">
                 {t('recentlyAdded.viewAllVehicles')}
                 <ArrowRight className="h-3 w-3" />
               </Link>

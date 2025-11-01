@@ -53,6 +53,7 @@ export function middleware(request: NextRequest) {
   
   // Check if this is an API route, static file, or other special paths
   if (
+    pathname === '/' || // Skip processing the root path to avoid loops
     pathname.startsWith('/api/') ||
     pathname.startsWith('/_next/') ||
     pathname.startsWith('/admin/') ||
@@ -63,17 +64,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Check if there is any supported locale in the pathname
-  const pathnameIsMissingLocale = languages.every(
-    (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`
-  );
-
-  // If no locale in pathname and it's not the root, redirect with locale
-  if (pathnameIsMissingLocale && pathname !== '/') {
-    const locale = getLocale(request);
-    return NextResponse.redirect(
-      new URL(`/${locale}${pathname}`, request.url)
-    );
+  // Check if the path starts with a language code we need to redirect from
+  for (const locale of languages) {
+    if (pathname.startsWith(`/${locale}/`)) {
+      // Remove the language prefix and redirect
+      const newPath = pathname.replace(`/${locale}`, '');
+      // Add a console log to debug
+      console.log(`Redirecting from ${pathname} to ${newPath}`);
+      return NextResponse.redirect(new URL(newPath, request.url));
+    } else if (pathname === `/${locale}`) {
+      // Redirect /en to /
+      console.log(`Redirecting from ${pathname} to /`);
+      return NextResponse.redirect(new URL('/', request.url));
+    }
   }
 
   return NextResponse.next();

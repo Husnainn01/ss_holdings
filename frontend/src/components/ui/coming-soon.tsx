@@ -19,7 +19,7 @@ export function ComingSoon({
   onNotifyClick
 }: ComingSoonProps) {
   const { currentLanguage } = useLanguage();
-  const { t } = useTranslation(currentLanguage);
+  const { t } = useTranslation(); // Remove the argument as it's not expected
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -73,10 +73,10 @@ export function ComingSoon({
             <p className="text-sm text-gray-500">
               Need immediate assistance?{' '}
               <Link 
-                href={`/${currentLanguage}/contact`}
+                href="/contact"
                 className="text-blue-600 hover:text-blue-700 font-medium"
               >
-                {t('navigation.contact')}
+                Contact Us
               </Link>
             </p>
           </div>

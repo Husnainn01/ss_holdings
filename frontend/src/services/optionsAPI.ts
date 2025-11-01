@@ -1,30 +1,12 @@
 import axios from 'axios';
+import { getItem } from '@/lib/localStorage';
+import config, { getApiBaseUrl } from '@/config';
 
-// Determine the API base URL based on environment
-const getApiBaseUrl = () => {
-  // If NEXT_PUBLIC_API_URL is set, use it (for production)
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-  
-  // For development, check if we're running locally
-  if (typeof window !== 'undefined') {
-    // Client-side: check the current origin
-    if (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')) {
-      return 'http://localhost:5001/api';
-    }
-  } else {
-    // Server-side: check NODE_ENV
-    if (process.env.NODE_ENV === 'development') {
-      return 'http://localhost:5001/api';
-    }
-  }
-  
-  // Default to production
-  return 'https://ssholdings-production.up.railway.app/api';
-};
+// Use the API URL from our centralized config
+const API_URL = config.apiUrl;
 
-const API_URL = getApiBaseUrl();
+// Log which API URL is being used
+console.log('optionsAPI is using API URL:', API_URL);
 
 // Define Option interface
 export interface Option {
@@ -54,8 +36,16 @@ export type OptionCategory =
 
 // Get options by category (public endpoint - no auth required)
 export const getOptionsByCategory = async (category: OptionCategory): Promise<Option[]> => {
+  // Skip API call during server-side rendering
+  if (typeof window === 'undefined') {
+    console.log(`Skipping getOptionsByCategory(${category}) during server-side rendering`);
+    return [];
+  }
+  
   try {
+    console.log(`Fetching options for category ${category} from ${API_URL}/options/category/${category}`);
     const response = await axios.get(`${API_URL}/options/category/${category}`);
+    console.log(`Received ${response.data.data.length} options for ${category}`);
     return response.data.data;
   } catch (error) {
     console.error(`Error fetching ${category} options:`, error);
@@ -83,7 +73,7 @@ export const getAllOptions = async (
   limit: number = 50
 ): Promise<{ data: Option[]; pagination: any }> => {
   try {
-    const token = localStorage.getItem('adminAuth');
+    const token = getItem('adminAuth');
     if (!token) throw new Error('No authentication token');
 
     let url = `${API_URL}/options?page=${page}&limit=${limit}`;
@@ -106,7 +96,7 @@ export const getAllOptions = async (
 // Get single option
 export const getOption = async (id: string): Promise<Option | null> => {
   try {
-    const token = localStorage.getItem('adminAuth');
+    const token = getItem('adminAuth');
     if (!token) throw new Error('No authentication token');
 
     const response = await axios.get(`${API_URL}/options/${id}`, {
@@ -123,7 +113,7 @@ export const getOption = async (id: string): Promise<Option | null> => {
 // Create option
 export const createOption = async (option: Omit<Option, '_id'>): Promise<Option | null> => {
   try {
-    const token = localStorage.getItem('adminAuth');
+    const token = getItem('adminAuth');
     if (!token) throw new Error('No authentication token');
 
     const response = await axios.post(`${API_URL}/options`, option, {
@@ -140,7 +130,7 @@ export const createOption = async (option: Omit<Option, '_id'>): Promise<Option 
 // Update option
 export const updateOption = async (id: string, option: Partial<Option>): Promise<Option | null> => {
   try {
-    const token = localStorage.getItem('adminAuth');
+    const token = getItem('adminAuth');
     if (!token) throw new Error('No authentication token');
 
     const response = await axios.put(`${API_URL}/options/${id}`, option, {
@@ -157,7 +147,7 @@ export const updateOption = async (id: string, option: Partial<Option>): Promise
 // Delete option
 export const deleteOption = async (id: string): Promise<boolean> => {
   try {
-    const token = localStorage.getItem('adminAuth');
+    const token = getItem('adminAuth');
     if (!token) throw new Error('No authentication token');
 
     await axios.delete(`${API_URL}/options/${id}`, {
@@ -174,7 +164,7 @@ export const deleteOption = async (id: string): Promise<boolean> => {
 // Upload brand image
 export const uploadBrandImage = async (id: string, formData: FormData): Promise<{ success: boolean; data: Option }> => {
   try {
-    const token = localStorage.getItem('adminAuth');
+    const token = getItem('adminAuth');
     if (!token) throw new Error('No authentication token');
 
     const response = await axios.post(`${API_URL}/options/${id}/upload-image`, formData, {
@@ -197,7 +187,7 @@ export const uploadBrandImage = async (id: string, formData: FormData): Promise<
 // Update options order
 export const updateOptionsOrder = async (options: { id: string; order: number }[]): Promise<boolean> => {
   try {
-    const token = localStorage.getItem('adminAuth');
+    const token = getItem('adminAuth');
     if (!token) throw new Error('No authentication token');
 
     await axios.put(`${API_URL}/options/bulk/order`, { options }, {

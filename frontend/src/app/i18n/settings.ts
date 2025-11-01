@@ -1,15 +1,16 @@
-export const fallbackLng = 'en';
-export const languages = ['en', 'ru', 'ja', 'ar', 'es'];
+// Simplified i18n settings - just stubs to avoid breaking imports
+import { DEFAULT_LANGUAGE } from '@/config';
+
+export const fallbackLng = DEFAULT_LANGUAGE;
+export const languages = [fallbackLng]; // Only one language now
 export const defaultNS = 'common';
 
-export function getOptions(lng = fallbackLng, ns = defaultNS) {
+export function getOptions() {
   return {
-    // debug: true,
     supportedLngs: languages,
     fallbackLng,
-    lng,
+    lng: fallbackLng,
     fallbackNS: defaultNS,
-    defaultNS,
-    ns
+    defaultNS
   };
-} 
+}

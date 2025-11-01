@@ -74,6 +74,9 @@ export default function BrandsSidebar({ initialBrands = [] }: BrandsSidebarProps
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     const fetchBrands = async () => {
       try {
         setLoading(true);
@@ -98,6 +101,7 @@ export default function BrandsSidebar({ initialBrands = [] }: BrandsSidebarProps
       }
     };
 
+    // Safe to fetch brands on client side
     fetchBrands();
   }, []);
   

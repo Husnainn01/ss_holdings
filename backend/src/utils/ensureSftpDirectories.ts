@@ -2,18 +2,18 @@ import Client from 'ssh2-sftp-client';
 
 // SFTP configuration
 const SFTP_CONFIG = {
-  host: '136.0.157.42',
+  host: 'mail.ss.holdings',
   port: 22, // Standard SFTP port
   username: 'ssholdings',
-  password: 'ka;M;QK}3}Nrxza3',
+  password: 'QQ?pBRTj$Zm4v57TDMf6d3dv&m',
   retries: 3,
   retry_factor: 2,
   retry_minTimeout: 2000
 };
 
 // Remote directory path on the server
-const REMOTE_BASE_PATH = '/home/ssholdings/public_html';
-const REMOTE_UPLOADS_PATH = `${REMOTE_BASE_PATH}/uploads`;
+const REMOTE_BASE_PATH = '/home/ssholdings/public_html/cdn.ss.holdings';
+const REMOTE_UPLOADS_PATH = `${REMOTE_BASE_PATH}/images`;
 
 /**
  * Ensures a remote directory exists, creating it if necessary

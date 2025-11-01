@@ -4,24 +4,24 @@ import * as path from 'path';
 import * as crypto from 'crypto';
 import config from '../config/config';
 
-// SFTP configuration
+// SFTP configuration from environment variables via config
 const SFTP_CONFIG = {
-  host: '136.0.157.42',
-  port: 22, // Standard SFTP port
-  username: 'ssholdings',
-  password: 'ka;M;QK}3}Nrxza3',
+  host: config.sftp.host,
+  port: config.sftp.port,
+  username: config.sftp.username,
+  password: config.sftp.password,
   retries: 3,
   retry_factor: 2,
   retry_minTimeout: 2000
 };
 
 // Remote directory path on the server
-// The path should be the absolute path on the server WITHOUT the cdn.ss.holdings duplication
-const REMOTE_BASE_PATH = '/home/ssholdings/public_html';
-const REMOTE_UPLOADS_PATH = `${REMOTE_BASE_PATH}/uploads`;
+// Path to the CDN directory on the server - using CDN URL from config
+const REMOTE_BASE_PATH = config.cdn.remotePath!; // Non-null assertion as we provide a default in config
+const REMOTE_UPLOADS_PATH = `${REMOTE_BASE_PATH}${config.cdn.uploadsPath}`;
 
-// Public URL base for accessing the uploaded files
-const PUBLIC_URL_BASE = 'https://cdn.ss.holdings/uploads';
+// Public URL base for accessing the uploaded files - using CDN URL from config
+const PUBLIC_URL_BASE = `${config.cdn.url}${config.cdn.uploadsPath}`;
 
 /**
  * Upload a file to the SFTP server
@@ -130,7 +130,7 @@ export const uploadFileToSFTP = async (
     console.log(`File uploaded successfully. Public URL: ${publicUrl}`);
     
     // Also log a direct HTTP URL for testing
-    const httpUrl = `http://${SFTP_CONFIG.host}/uploads/${remoteDir}/${fileName}`;
+    const httpUrl = `${config.cdn.url}/${remoteDir}/${fileName}`;
     console.log(`Alternative HTTP URL for testing: ${httpUrl}`);
     
     console.log('========== SFTP UPLOAD COMPLETED ==========');

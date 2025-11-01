@@ -1,32 +1,17 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
+import { getItem } from '@/lib/localStorage';
+import config, { getApiBaseUrl } from '@/config';
 
-// Determine the API base URL based on environment
-const getApiBaseUrl = () => {
-  // If NEXT_PUBLIC_API_URL is set, use it (for production)
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return process.env.NEXT_PUBLIC_API_URL;
-  }
-  
-  // For development, check if we're running locally
-  if (typeof window !== 'undefined') {
-    // Client-side: check the current origin
-    if (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1')) {
-      return 'http://localhost:5001/api';
-    }
-  } else {
-    // Server-side: check NODE_ENV
-    if (process.env.NODE_ENV === 'development') {
-      return 'http://localhost:5001/api';
-    }
-  }
-  
-  // Default to production
-  return 'https://ssholdings-production.up.railway.app/api';
-};
+
+// Get the API base URL
+const apiBaseUrl = getApiBaseUrl();
+
+// Log which API URL is being used
+console.log('API is connecting to:', apiBaseUrl);
 
 // Create axios instance with base URL and default headers
 const api = axios.create({
-  baseURL: getApiBaseUrl(),
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -37,7 +22,7 @@ api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Check if we're in the browser
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('adminAuth');
+      const token = getItem('adminAuth');
       if (token) {
         config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${token}`;
@@ -50,82 +35,219 @@ api.interceptors.request.use(
 
 // Auth API
 export const authAPI = {
-  login: (email: string, password: string) => 
-    api.post('/auth/login', { email, password }),
+  login: (email: string, password: string) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping auth login API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.post('/auth/login', { email, password });
+  },
   
-  checkAuth: () => 
-    api.get('/auth/me'),
+  checkAuth: () => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping auth checkAuth API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.get('/auth/me');
+  },
   
-  changePassword: (data: { currentPassword: string; newPassword: string }) => 
-    api.put('/auth/change-password', data),
+  changePassword: (data: { currentPassword: string; newPassword: string }) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping auth changePassword API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.put('/auth/change-password', data);
+  },
   
-  updateProfile: (data: { name: string; email: string }) => 
-    api.put('/auth/update-profile', data),
+  updateProfile: (data: { name: string; email: string }) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping auth updateProfile API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.put('/auth/update-profile', data);
+  },
   
-  verifyTurnstile: (token: string) => 
-    api.post('/auth/verify-turnstile', { token }),
+  verifyTurnstile: (token: string) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping auth verifyTurnstile API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.post('/auth/verify-turnstile', { token });
+  },
 };
 
 // User API
 export const userAPI = {
-  getUsers: (params?: { page?: number; limit?: number; search?: string; role?: string }) => 
-    api.get('/admin/users', { params }),
+  getUsers: (params?: { page?: number; limit?: number; search?: string; role?: string }) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping user getUsers API call during server-side rendering');
+      return Promise.resolve({ data: { users: [], total: 0 } });
+    }
+    return api.get('/admin/users', { params });
+  },
   
-  getUser: (id: string) => 
-    api.get(`/admin/users/${id}`),
+  getUser: (id: string) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping user getUser API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.get(`/admin/users/${id}`);
+  },
   
-  createUser: (userData: any) => 
-    api.post('/auth/register', userData),
+  createUser: (userData: any) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping user createUser API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.post('/auth/register', userData);
+  },
   
-  updateUser: (id: string, userData: any) => 
-    api.put(`/admin/users/${id}`, userData),
+  updateUser: (id: string, userData: any) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping user updateUser API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.put(`/admin/users/${id}`, userData);
+  },
   
-  deleteUser: (id: string) => 
-    api.delete(`/admin/users/${id}`),
+  deleteUser: (id: string) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping user deleteUser API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.delete(`/admin/users/${id}`);
+  },
   
-  getUserPermissions: (id: string) => 
-    api.get(`/admin/users/${id}/permissions`),
+  getUserPermissions: (id: string) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping user getUserPermissions API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.get(`/admin/users/${id}/permissions`);
+  },
   
-  updateUserRole: (id: string, role: string) => 
-    api.put(`/roles/user/${id}/role`, { role }),
+  updateUserRole: (id: string, role: string) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping user updateUserRole API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.put(`/roles/user/${id}/role`, { role });
+  },
   
-  updateUserPermissions: (id: string, permissions: string[]) => 
-    api.put(`/roles/user/${id}/permissions`, { permissions }),
+  updateUserPermissions: (id: string, permissions: string[]) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping user updateUserPermissions API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.put(`/roles/user/${id}/permissions`, { permissions });
+  },
 };
 
 // Role API
 export const roleAPI = {
-  getRoles: () => 
-    api.get('/roles'),
+  getRoles: () => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping role getRoles API call during server-side rendering');
+      return Promise.resolve({ data: [] });
+    }
+    return api.get('/roles');
+  },
   
-  getPermissions: () => 
-    api.get('/roles/permissions'),
+  getPermissions: () => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping role getPermissions API call during server-side rendering');
+      return Promise.resolve({ data: [] });
+    }
+    return api.get('/roles/permissions');
+  },
   
-  updateUserRole: (id: string, role: string) => 
-    api.put(`/roles/user/${id}/role`, { role }),
+  updateUserRole: (id: string, role: string) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping role updateUserRole API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.put(`/roles/user/${id}/role`, { role });
+  },
   
-  updateUserPermissions: (id: string, permissions: string[]) => 
-    api.put(`/roles/user/${id}/permissions`, { permissions }),
+  updateUserPermissions: (id: string, permissions: string[]) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping role updateUserPermissions API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.put(`/roles/user/${id}/permissions`, { permissions });
+  },
 };
 
 // Vehicle API
 export const vehicleAPI = {
-  getVehicles: (params?: any) => 
-    api.get('/vehicles', { params }),
+  getVehicles: (params?: any) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping getVehicles API call during server-side rendering');
+      return Promise.resolve({ data: { vehicles: [], total: 0 } });
+    }
+    return api.get('/vehicles', { params });
+  },
   
-  getVehicle: (id: string) => 
-    api.get(`/vehicles/${id}`),
+  getVehicle: (id: string) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping getVehicle API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.get(`/vehicles/${id}`);
+  },
   
-  getRecentVehicles: (limit: number = 10) => 
-    api.get('/vehicles/recent/list', { params: { limit } }),
+  getRecentVehicles: (limit: number = 10) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping getRecentVehicles API call during server-side rendering');
+      return Promise.resolve({ data: [] });
+    }
+    return api.get('/vehicles/recent/list', { params: { limit } });
+  },
   
-  getVehicleLocations: () =>
-    api.get('/vehicles/locations/list'),
+  getVehicleLocations: () => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping getVehicleLocations API call during server-side rendering');
+      return Promise.resolve({ data: [] });
+    }
+    return api.get('/vehicles/locations/list');
+  },
   
-  getModelsByMake: (make: string) =>
-    api.get(`/vehicles/models/${encodeURIComponent(make)}`),
+  getModelsByMake: (make: string) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping getModelsByMake API call during server-side rendering');
+      return Promise.resolve({ data: [] });
+    }
+    return api.get(`/vehicles/models/${encodeURIComponent(make)}`);
+  },
   
   createVehicle: (vehicleData: FormData) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping createVehicle API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
     // For FormData, don't set Content-Type, let the browser set it with boundary
     return api.post('/admin/vehicles', vehicleData, {
       headers: {
@@ -135,6 +257,11 @@ export const vehicleAPI = {
   },
   
   updateVehicle: (id: string, vehicleData: FormData) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping updateVehicle API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
     // For FormData, don't set Content-Type, let the browser set it with boundary
     return api.put(`/admin/vehicles/${id}`, vehicleData, {
       headers: {
@@ -143,35 +270,89 @@ export const vehicleAPI = {
     });
   },
   
-  deleteVehicle: (id: string) => 
-    api.delete(`/admin/vehicles/${id}`),
+  deleteVehicle: (id: string) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping deleteVehicle API call during server-side rendering');
+      return Promise.resolve({ data: null });
+    }
+    return api.delete(`/admin/vehicles/${id}`);
+  },
 };
 
 // Dashboard API
 export const dashboardAPI = {
-  getStats: () =>
-    api.get('/admin/dashboard/stats'),
+  getStats: () => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping dashboard getStats API call during server-side rendering');
+      return Promise.resolve({ data: {} });
+    }
+    return api.get('/admin/dashboard/stats');
+  },
   
-  getTopBrands: () =>
-    api.get('/admin/dashboard/top-brands'),
+  getTopBrands: () => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping dashboard getTopBrands API call during server-side rendering');
+      return Promise.resolve({ data: [] });
+    }
+    return api.get('/admin/dashboard/top-brands');
+  },
   
-  getRecentActivity: (limit: number = 10) =>
-    api.get('/admin/dashboard/recent-activity', { params: { limit } }),
+  getRecentActivity: (limit: number = 10) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping dashboard getRecentActivity API call during server-side rendering');
+      return Promise.resolve({ data: [] });
+    }
+    return api.get('/admin/dashboard/recent-activity', { params: { limit } });
+  },
   
-  getUserActivityStats: () =>
-    api.get('/admin/dashboard/user-activity-stats'),
+  getUserActivityStats: () => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping dashboard getUserActivityStats API call during server-side rendering');
+      return Promise.resolve({ data: {} });
+    }
+    return api.get('/admin/dashboard/user-activity-stats');
+  },
   
-  getMostActiveUsers: (limit: number = 5) =>
-    api.get('/admin/dashboard/most-active-users', { params: { limit } }),
+  getMostActiveUsers: (limit: number = 5) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping dashboard getMostActiveUsers API call during server-side rendering');
+      return Promise.resolve({ data: [] });
+    }
+    return api.get('/admin/dashboard/most-active-users', { params: { limit } });
+  },
   
-  getVehicleStats: () =>
-    api.get('/admin/dashboard/vehicle-stats'),
+  getVehicleStats: () => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping dashboard getVehicleStats API call during server-side rendering');
+      return Promise.resolve({ data: {} });
+    }
+    return api.get('/admin/dashboard/vehicle-stats');
+  },
   
-  getSftpUsageStats: (days: number = 7) =>
-    api.get('/admin/dashboard/sftp-usage', { params: { days } }),
+  getSftpUsageStats: (days: number = 7) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping dashboard getSftpUsageStats API call during server-side rendering');
+      return Promise.resolve({ data: {} });
+    }
+    return api.get('/admin/dashboard/sftp-usage', { params: { days } });
+  },
   
-  getRecentSftpUploads: (limit: number = 10) =>
-    api.get('/admin/dashboard/recent-sftp-uploads', { params: { limit } }),
+  getRecentSftpUploads: (limit: number = 10) => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('Skipping dashboard getRecentSftpUploads API call during server-side rendering');
+      return Promise.resolve({ data: [] });
+    }
+    return api.get('/admin/dashboard/recent-sftp-uploads', { params: { limit } });
+  },
 };
 
 export default api; 

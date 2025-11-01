@@ -1,8 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SS Holdings Frontend
+
+This is a [Next.js](https://nextjs.org) project for SS Holdings, a global auto export company.
 
 ## Getting Started
 
-First, run the development server:
+### Environment Setup
+
+Before running the application, you need to set up your environment variables:
+
+1. Copy the `.env.example` file to `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+2. Edit `.env.local` and update the values as needed:
+
+```
+# API URLs
+NEXT_PUBLIC_API_URL=https://ssholdings-production.up.railway.app/api
+NEXT_PUBLIC_API_URL_DEV=http://localhost:5001/api
+
+# CDN URLs
+NEXT_PUBLIC_CDN_URL=https://cdn.ss.holdings
+
+# Site information
+NEXT_PUBLIC_SITE_NAME=SS Holdings
+NEXT_PUBLIC_SITE_DESCRIPTION=Global Auto Exports
+
+# Default language
+NEXT_PUBLIC_DEFAULT_LANGUAGE=en
+```
+
+### Connecting to Local Backend
+
+To connect to the local backend server instead of the production API:
+
+1. Make sure the backend server is running on http://localhost:5001
+2. In your `.env.local` file, comment out the `NEXT_PUBLIC_API_URL` line and keep only the `NEXT_PUBLIC_API_URL_DEV` line:
+
+```
+# Comment out production URL to use localhost
+# NEXT_PUBLIC_API_URL=https://ssholdings-production.up.railway.app/api
+NEXT_PUBLIC_API_URL_DEV=http://localhost:5001/api
+```
+
+3. The frontend is configured to prioritize the local API when in development mode.
+
+### Running the Development Server
+
+After setting up your environment variables, run the development server:
 
 ```bash
 npm run dev
@@ -14,7 +61,7 @@ pnpm dev
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3001](http://localhost:3001) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 

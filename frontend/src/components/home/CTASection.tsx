@@ -86,12 +86,16 @@ export default function CTASection({
   
   // Scroll effect
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     const handleScroll = () => {
       if (isMounted.current) {
         setScrollY(window.scrollY);
       }
     };
     
+    // Safe event listener
     window.addEventListener("scroll", handleScroll);
     
     return () => {

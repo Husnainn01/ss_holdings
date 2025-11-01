@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getItem } from '@/lib/localStorage';
 import { 
   Card, 
   CardHeader, 
@@ -86,7 +87,7 @@ export default function OptionsManager({ category, title, description }: Options
 
   // Check authentication
   useEffect(() => {
-    const token = localStorage.getItem('adminAuth');
+    const token = getItem('adminAuth');
     if (!token) {
       router.push('/admin/login');
     }

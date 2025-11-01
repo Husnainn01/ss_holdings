@@ -222,7 +222,7 @@ export default function CarForm({ id, isEditMode = false }: CarFormProps) {
         images: vehicleData.images ? vehicleData.images.map((img: any) => ({
           ...img,
           // Update image URLs to use the new CDN domain if they're using the old domain
-          url: img.url.replace('https://ss.holdings/uploads', 'https://cdn.ss.holdings/uploads')
+          url: img.url.replace('https://ss.holdings/uploads', `${require('@/config').CDN_URL}/uploads`)
         })) : [],
         stockNumber: vehicleData.stockNumber || "",
         driveType: vehicleData.driveType || "",
@@ -244,7 +244,7 @@ export default function CarForm({ id, isEditMode = false }: CarFormProps) {
       if (vehicleData.images && vehicleData.images.length > 0) {
         // Update image URLs to use the new CDN domain
         const imageUrls = vehicleData.images.map((img: any) => 
-          img.url.replace('https://ss.holdings/uploads', 'https://cdn.ss.holdings/uploads')
+          img.url.replace('https://ss.holdings/uploads', `${require('@/config').CDN_URL}/uploads`)
         );
         setPreviewImages(imageUrls);
       }

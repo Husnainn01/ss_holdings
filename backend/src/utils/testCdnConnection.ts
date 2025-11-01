@@ -32,7 +32,7 @@ async function testCdnConnection() {
     const urls = [
       uploadResult.url,
       uploadResult.url.replace('https://cdn.ss.holdings', 'http://cdn.ss.holdings'),
-      uploadResult.url.replace('https://cdn.ss.holdings', 'http://136.0.157.42/cdn.ss.holdings'),
+      uploadResult.url.replace('https://cdn.ss.holdings', 'https://mail.ss.holdings:2083/cdn.ss.holdings'),
       uploadResult.url.replace('https://cdn.ss.holdings', 'https://ss.holdings/cdn.ss.holdings')
     ];
     

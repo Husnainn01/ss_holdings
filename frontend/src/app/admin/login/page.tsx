@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Lock, Mail, ArrowLeft } from "lucide-react";
 import { authAPI } from "@/services/api";
+import { setItem } from "@/lib/localStorage";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -24,7 +25,7 @@ export default function AdminLogin() {
       
       // Store the token in localStorage
       if (response.data && response.data.token) {
-        localStorage.setItem("adminAuth", response.data.token);
+        setItem("adminAuth", response.data.token);
         router.push("/admin/dashboard");
       } else {
         setError("Invalid response from server");

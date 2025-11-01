@@ -2,13 +2,14 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getItem } from "@/lib/localStorage";
 
 export default function AdminRedirect() {
   const router = useRouter();
 
   useEffect(() => {
     // Check if user is authenticated
-    const adminAuth = localStorage.getItem("adminAuth");
+    const adminAuth = getItem("adminAuth");
     
     if (adminAuth) {
       // If authenticated, redirect to dashboard

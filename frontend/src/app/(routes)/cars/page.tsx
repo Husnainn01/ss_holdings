@@ -24,6 +24,7 @@ import {
   Fuel
 } from 'lucide-react';
 import { vehicleAPI } from '@/services/api';
+import config from '@/config';
 import Link from 'next/link';
 
 interface CarMake {
@@ -206,8 +207,15 @@ function CarsPageContent() {
   
   // Fetch cars from API with filters
   useEffect(() => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('CarsPage: Skipping API call during server-side rendering');
+      return;
+    }
+    
     const fetchCars = async () => {
       try {
+        console.log('CarsPage: Fetching cars using API URL:', config.apiUrl);
         setIsLoading(true);
         
         // Build query params
@@ -248,37 +256,49 @@ function CarsPageContent() {
             params.sort = '-createdAt';
         }
         
-        const response = await vehicleAPI.getVehicles(params);
+        console.log('CarsPage: Fetching vehicles with params:', params);
         
-        if (response.data && response.data.vehicles) {
-          // Map API data to our component format
-          const mappedCars = response.data.vehicles.map((vehicle: any) => ({
-            id: vehicle._id,
-            title: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-            make: vehicle.make,
-            model: vehicle.model,
-            year: vehicle.year,
-            price: vehicle.price,
-            mileage: vehicle.mileage || "0",
-            location: vehicle.location || "N/A",
-            transmission: vehicle.vehicleTransmission || "N/A",
-            fuel: vehicle.fuelType || "N/A",
-            bodyType: vehicle.bodyType || "N/A",
-            imageUrl: vehicle.images && vehicle.images.length > 0 ? 
-              vehicle.images.find((img: any) => img.isMain)?.url || vehicle.images[0].url : 
-              `https://placehold.co/600x400/png?text=${vehicle.make}+${vehicle.model}`,
-            featured: vehicle.isFeatured || false
-          }));
+        try {
+          const response = await vehicleAPI.getVehicles(params);
           
-          setApiCars(mappedCars);
-          setTotalCars(response.data.total);
-          console.log("Fetched vehicles:", mappedCars.length, "Total:", response.data.total);
+          if (response.data && response.data.vehicles) {
+            console.log(`CarsPage: Received ${response.data.vehicles.length} vehicles out of ${response.data.total} total`);
+            
+            // Map API data to our component format
+            const mappedCars = response.data.vehicles.map((vehicle: any) => ({
+              id: vehicle._id,
+              title: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+              make: vehicle.make,
+              model: vehicle.model,
+              year: vehicle.year,
+              price: vehicle.price,
+              mileage: vehicle.mileage || "0",
+              location: vehicle.location || "N/A",
+              transmission: vehicle.vehicleTransmission || "N/A",
+              fuel: vehicle.fuelType || "N/A",
+              bodyType: vehicle.bodyType || "N/A",
+              imageUrl: vehicle.images && vehicle.images.length > 0 ? 
+                vehicle.images.find((img: any) => img.isMain)?.url || vehicle.images[0].url : 
+                `https://placehold.co/600x400/png?text=${vehicle.make}+${vehicle.model}`,
+              featured: vehicle.isFeatured || false
+            }));
+            
+            setApiCars(mappedCars);
+            setTotalCars(response.data.total);
+            console.log("CarsPage: Successfully processed vehicles data");
+          } else {
+            console.warn("CarsPage: Received empty or invalid response data");
+          }
+        } catch (apiError) {
+          console.error("CarsPage: API Error:", apiError);
+          setError("Failed to load vehicles. Please try again later.");
         }
       } catch (err) {
-        console.error("Error fetching vehicles:", err);
+        console.error("CarsPage: Error in fetchCars:", err);
         setError("Failed to load vehicles. Please try again later.");
       } finally {
         setIsLoading(false);
+        console.log('CarsPage: Finished loading vehicles');
       }
     };
     
@@ -288,6 +308,12 @@ function CarsPageContent() {
   
   // Fetch models when make changes
   useEffect(() => {
+    // Skip API calls during server-side rendering
+    if (typeof window === 'undefined') {
+      console.log('CarsPage: Skipping models API call during server-side rendering');
+      return;
+    }
+    
     const fetchModels = async () => {
       try {
         // Clear model selection when make changes
@@ -297,23 +323,33 @@ function CarsPageContent() {
         
         // Reset models when make is cleared
         if (!make) {
+          console.log('CarsPage: No make selected, resetting models');
           setModels([]);
           return;
         }
         
+        console.log(`CarsPage: Fetching models for make: ${make} using API URL: ${config.apiUrl}`);
         setIsLoadingModels(true);
-        const response = await vehicleAPI.getModelsByMake(make);
-        setModels(response.data);
+        
+        try {
+          const response = await vehicleAPI.getModelsByMake(make);
+          console.log(`CarsPage: Received ${response.data?.length || 0} models for ${make}`);
+          setModels(response.data);
+        } catch (apiError) {
+          console.error("CarsPage: API Error fetching models:", apiError);
+          setModels([]);
+        }
       } catch (error) {
-        console.error("Error fetching models:", error);
+        console.error("CarsPage: Error in fetchModels:", error);
         setModels([]);
       } finally {
         setIsLoadingModels(false);
+        console.log('CarsPage: Models loading complete');
       }
     };
     
     fetchModels();
-  }, [make]);
+  }, [make, model]);
   
   // Use only API data
   const allCars = apiCars;

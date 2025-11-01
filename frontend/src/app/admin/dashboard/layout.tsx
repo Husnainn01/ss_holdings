@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/admin/Sidebar";
 import { Loader2 } from "lucide-react";
 import { authAPI } from "@/services/api";
+import { getItem, removeItem } from "@/lib/localStorage";
 
 export default function DashboardLayout({
   children,
@@ -18,7 +19,7 @@ export default function DashboardLayout({
   useEffect(() => {
     // Check if user is authenticated
     const authCheck = async () => {
-      const token = localStorage.getItem("adminAuth");
+      const token = getItem("adminAuth");
       if (!token) {
         router.push("/admin/login");
         return;
@@ -31,7 +32,7 @@ export default function DashboardLayout({
       } catch (error) {
         console.error("Authentication error:", error);
         // Clear invalid token
-        localStorage.removeItem("adminAuth");
+        removeItem("adminAuth");
         router.push("/admin/login");
       } finally {
         setIsLoading(false);

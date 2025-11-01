@@ -21,6 +21,13 @@ interface Config {
   cdn: {
     url: string;
     uploadsPath: string;
+    remotePath?: string;
+  };
+  sftp: {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
   };
 }
 
@@ -53,12 +60,21 @@ const config: Config = {
   // CDN configuration
   cdn: {
     url: process.env.CDN_URL || 'https://cdn.ss.holdings',
-    uploadsPath: '/uploads'
+    uploadsPath: '/images',
+    remotePath: process.env.CDN_REMOTE_PATH || '/home/ssholdings/public_html/cdn.ss.holdings'
   },
   
   // Turnstile configuration (for verification)
   turnstile: {
     secretKey: process.env.TURNSTILE_SECRET_KEY || ''
+  },
+  
+  // SFTP configuration
+  sftp: {
+    host: process.env.SFTP_HOST || 'sftp.ss.holdings',
+    port: parseInt(process.env.SFTP_PORT || '22', 10),
+    username: process.env.SFTP_USERNAME || 'sftpuser',
+    password: process.env.SFTP_PASSWORD || ''
   }
 };
 

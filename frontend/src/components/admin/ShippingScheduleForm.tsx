@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { getItem } from '@/lib/localStorage';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -100,7 +101,7 @@ export default function ShippingScheduleForm({
   const fetchScheduleData = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('adminAuth');
+      const token = getItem('adminAuth');
       
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/shipping-schedule/${scheduleId}`,
@@ -221,7 +222,7 @@ export default function ShippingScheduleForm({
       setSaving(true);
       setError(null);
       
-      const token = localStorage.getItem('adminAuth');
+      const token = getItem('adminAuth');
       const url = isEditMode 
         ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/shipping-schedule/${scheduleId}`
         : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/shipping-schedule`;

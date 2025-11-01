@@ -1,7 +1,7 @@
 'use client';
 
-// import Image from 'next/image';
-// import { Button } from "@/components/ui/button";
+import React, { useState, useEffect } from 'react';
+import SafeClientWrapper from './SafeClientWrapper';
 import HeroSection from '@/components/home/HeroSection';
 import BrandsSidebar from '@/components/home/BrandsSidebar';
 import SearchForm from '@/components/home/SearchForm';
@@ -12,30 +12,26 @@ import CTASection from '@/components/home/CTASection';
 import BrandsSection from '@/components/home/BrandsSection';
 import SidebarShipping from '@/components/home/SidebarShipping';
 import FeaturedCars from '@/components/home/FeaturedCars';
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import { useEffect, useState } from 'react';
+import { vehicleAPI } from '@/services/api';
+import config from '@/config';
+// Removed Header and Footer imports as they're now in the MainLayout
 
 // Client-side data fetching function
 async function getVehicles() {
   try {
-    // Fetch recently added vehicles
-    const recentResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/vehicles?limit=8&sort=-createdAt`);
+    console.log('Fetching vehicles using API URL:', config.apiUrl);
     
-    // Fetch featured vehicles
-    const featuredResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/vehicles?isFeatured=true&limit=4`);
+    // Fetch recently added vehicles using the vehicleAPI service
+    const recentResponse = await vehicleAPI.getVehicles({
+      limit: 8,
+      sort: '-createdAt'
+    });
     
-    if (!recentResponse.ok || !featuredResponse.ok) {
-      console.error('Error fetching vehicles:', 
-        recentResponse.ok ? '' : `Recent: ${recentResponse.status}`,
-        featuredResponse.ok ? '' : `Featured: ${featuredResponse.status}`
-      );
-      // If there's an error, return empty arrays
-      return { recentCars: [], featuredCars: [] };
-    }
-    
-    const recentData = await recentResponse.json();
-    const featuredData = await featuredResponse.json();
+    // Fetch featured vehicles using the vehicleAPI service
+    const featuredResponse = await vehicleAPI.getVehicles({
+      isFeatured: true,
+      limit: 4
+    });
     
     // Map the API data to our component format
     const mapVehicle = (vehicle: any) => ({
@@ -59,10 +55,15 @@ async function getVehicles() {
       featured: vehicle.isFeatured || false
     });
     
-    const recentCars = recentData.vehicles ? recentData.vehicles.map(mapVehicle) : [];
-    const featuredCars = featuredData.vehicles ? featuredData.vehicles.map(mapVehicle) : [];
+    const recentCars = recentResponse.data.vehicles ? recentResponse.data.vehicles.map(mapVehicle) : [];
+    const featuredCars = featuredResponse.data.vehicles ? featuredResponse.data.vehicles.map(mapVehicle) : [];
     
-    console.log('Fetched vehicles:', { recentCount: recentCars.length, featuredCount: featuredCars.length });
+    console.log('Fetched vehicles:', { 
+      recentCount: recentCars.length, 
+      featuredCount: featuredCars.length,
+      recentTotal: recentResponse.data.total,
+      featuredTotal: featuredResponse.data.total
+    });
     
     return { recentCars, featuredCars };
   } catch (error) {
@@ -71,17 +72,58 @@ async function getVehicles() {
   }
 }
 
-export default function HomePage() {
+export default function HomePageClient() {
   const [recentCars, setRecentCars] = useState<any[]>([]);
   const [featuredCars, setFeaturedCars] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log('HomePageClient: Starting to fetch vehicles...');
+    
+    // Check if the backend server is running
+    const checkBackendServer = async () => {
+      try {
+        console.log('Checking if backend server is running at:', config.apiUrl);
+        const response = await fetch(`${config.apiUrl}/health-check`, { 
+          method: 'HEAD',
+          headers: { 'Content-Type': 'application/json' },
+          // Short timeout to quickly detect if server is not responding
+          signal: AbortSignal.timeout(2000)
+        });
+        
+        if (response.ok) {
+          console.log('Backend server is running!');
+          return true;
+        } else {
+          console.warn('Backend server returned an error status:', response.status);
+          return false;
+        }
+      } catch (error) {
+        console.warn('Backend server check failed, trying to fetch data anyway:', error);
+        return false;
+      }
+    };
+    
     const fetchData = async () => {
-      const { recentCars: recent, featuredCars: featured } = await getVehicles();
-      setRecentCars(recent);
-      setFeaturedCars(featured);
-      setIsLoading(false);
+      try {
+        // We'll try to fetch data even if the health check fails
+        await checkBackendServer();
+        
+        console.log('HomePageClient: Calling getVehicles()...');
+        const { recentCars: recent, featuredCars: featured } = await getVehicles();
+        
+        console.log('HomePageClient: Got vehicles data:', { 
+          recentCount: recent?.length || 0, 
+          featuredCount: featured?.length || 0 
+        });
+        
+        setRecentCars(recent || []);
+        setFeaturedCars(featured || []);
+      } catch (error) {
+        console.error('HomePageClient: Error in fetchData:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     fetchData();
@@ -163,8 +205,7 @@ export default function HomePage() {
   ];
   
   return (
-    <div className="flex min-h-screen flex-col bg-[#F4E7E1]">
-      <Header />
+    <SafeClientWrapper>
       <main className="flex-1 w-full bg-gray-100">
         {/* Hero Section */}
         <HeroSection buttons={heroButtons} />
@@ -185,7 +226,21 @@ export default function HomePage() {
             
             {/* Recently Added Cars */}
             <div className="mb-12">
-              <RecentlyAdded cars={recentCars} />
+              {isLoading ? (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8 text-center">
+                  <div className="animate-pulse flex flex-col items-center">
+                    <div className="h-8 w-64 bg-gray-200 rounded mb-4"></div>
+                    <div className="h-4 w-48 bg-gray-200 rounded mb-8"></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 w-full">
+                      {[...Array(4)].map((_, i) => (
+                        <div key={i} className="h-48 bg-gray-200 rounded"></div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <RecentlyAdded cars={recentCars} />
+              )}
             </div>
           </div>
           
@@ -194,13 +249,6 @@ export default function HomePage() {
             <SidebarShipping />
           </div>
         </div>
-        
-        {/* Featured Cars Section */}
-        {/* <FeaturedCars 
-          cars={featuredCars} 
-          title="Featured Vehicles" 
-          subtitle="Premium selection of our most popular export vehicles"
-        /> */}
         
         {/* Why Choose Us Section */}
         <WhyChooseUs features={features} />
@@ -218,7 +266,6 @@ export default function HomePage() {
           buttons={ctaButtons}
         />
       </main>
-      <Footer />
-    </div>
+    </SafeClientWrapper>
   );
 }

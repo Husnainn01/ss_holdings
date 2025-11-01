@@ -7,16 +7,35 @@ import { Search, Filter, ChevronRight, Car, Calendar, CreditCard, Gauge, Loader2
 import { motion } from "framer-motion";
 import { vehicleAPI } from '@/services/api';
 import { getOptionsByCategory, Option } from '@/services/optionsAPI';
-import { useTranslation } from '@/app/i18n/client';
-import { useLanguage } from '@/components/providers/LanguageProvider';
+import config from '@/config';
+// Removed language-related imports
 
 interface SearchFormProps {
   className?: string;
 }
 
+// Simple translation function that returns hardcoded values
+const t = (key: string) => {
+  const translations: Record<string, string> = {
+    'common.loading': 'Loading...',
+    'search.title': 'Search Vehicles',
+    'search.selectMake': 'Select Make',
+    'search.make': 'Make',
+    'search.selectModel': 'Select Model',
+    'search.model': 'Model',
+    'search.selectYear': 'Select Year',
+    'search.year': 'Year',
+    'search.selectBodyType': 'Select Body Type',
+    'search.bodyType': 'Body Type',
+    'search.priceRange': 'Price Range',
+    'search.searchVehicles': 'Search Vehicles'
+  };
+  
+  return translations[key] || key;
+};
+
 export default function SearchForm({ className }: SearchFormProps) {
-  const { currentLanguage } = useLanguage();
-  const { t } = useTranslation(currentLanguage);
+  const currentLanguage = 'en';
   const router = useRouter();
   const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
   const [searchParams, setSearchParams] = useState({
@@ -45,20 +64,29 @@ export default function SearchForm({ className }: SearchFormProps) {
   useEffect(() => {
     const fetchOptions = async () => {
       try {
+        console.log('SearchForm: Fetching options data using API URL:', config.apiUrl);
         setIsLoading(true);
+        
         const [makesData, bodyTypesData, conditionsData] = await Promise.all([
           getOptionsByCategory('makes'),
           getOptionsByCategory('bodyTypes'),
           getOptionsByCategory('conditionTypes')
         ]);
         
+        console.log('SearchForm: Received options data:', {
+          makes: makesData.length,
+          bodyTypes: bodyTypesData.length,
+          conditions: conditionsData.length
+        });
+        
         setMakes(makesData);
         setBodyTypes(bodyTypesData);
         setConditions(conditionsData);
       } catch (error) {
-        console.error("Error fetching options:", error);
+        console.error("SearchForm: Error fetching options:", error);
       } finally {
         setIsLoading(false);
+        console.log('SearchForm: Options loading complete');
       }
     };
     
@@ -71,15 +99,20 @@ export default function SearchForm({ className }: SearchFormProps) {
       try {
         // Reset models when make is cleared
         if (!searchParams.make) {
+          console.log('SearchForm: Make is empty, resetting models');
           setModels([]);
           return;
         }
         
+        console.log(`SearchForm: Fetching models for make: ${searchParams.make}`);
         setIsLoadingModels(true);
+        
         const response = await vehicleAPI.getModelsByMake(searchParams.make);
+        console.log(`SearchForm: Received ${response.data?.length || 0} models for ${searchParams.make}`);
+        
         setModels(response.data);
       } catch (error) {
-        console.error("Error fetching models:", error);
+        console.error("SearchForm: Error fetching models:", error);
         setModels([]);
       } finally {
         setIsLoadingModels(false);
@@ -108,20 +141,24 @@ export default function SearchForm({ className }: SearchFormProps) {
         
         // Only fetch if at least one filter is applied
         if (Object.keys(queryParams).length > 0) {
+          console.log('SearchForm: Fetching matching vehicles count with params:', queryParams);
           const response = await vehicleAPI.getVehicles(queryParams);
+          console.log(`SearchForm: Found ${response.data.total} matching vehicles`);
           setMatchingVehicles(response.data.total);
         } else {
           // If no filters, set to 0 to hide the count
+          console.log('SearchForm: No filters applied, hiding count');
           setMatchingVehicles(0);
         }
       } catch (error) {
-        console.error("Error fetching matching vehicles:", error);
+        console.error("SearchForm: Error fetching matching vehicles:", error);
       } finally {
         setIsCountLoading(false);
       }
     };
     
     // Use debounce to avoid too many API calls
+    console.log('SearchForm: Debouncing vehicle count fetch');
     const debounceTimeout = setTimeout(() => {
       fetchMatchingVehicles();
     }, 500);
@@ -145,7 +182,7 @@ export default function SearchForm({ className }: SearchFormProps) {
       }
     });
     
-    router.push(`/${currentLanguage}/cars?${params.toString()}`);
+    router.push(`/cars?${params.toString()}`);
   };
 
   const toggleAdvancedSearch = () => {
@@ -171,7 +208,7 @@ export default function SearchForm({ className }: SearchFormProps) {
     return (
       <div className={`bg-gradient-to-r from-[#1a3d50] to-[#2c5878] rounded-lg shadow-lg overflow-hidden ${className} p-8 flex justify-center items-center`}>
         <Loader2 className="h-8 w-8 animate-spin text-white" />
-        <span className="ml-2 text-white">{t('common.loading')}</span>
+        <span className="ml-2 text-white">Loading...</span>
       </div>
     );
   }

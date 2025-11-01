@@ -15,7 +15,10 @@ import { Search, Phone, Menu, X, ChevronDown, Globe, MapPin } from 'lucide-react
 import Image from 'next/image';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { useTranslation } from '@/app/i18n/client';
+// Import useLanguage from our simplified provider
 import { useLanguage } from '@/components/providers/LanguageProvider';
+import config from '@/config';
+import { vehicleAPI } from '@/services/api';
 
 interface MenuItem {
   name: string;
@@ -102,7 +105,7 @@ const MegaMenu = ({ sections }: { sections: MegaMenuSection[] }) => {
 
 export default function Header() {
   const { currentLanguage } = useLanguage();
-  const { t } = useTranslation(currentLanguage);
+  const { t } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -113,10 +116,13 @@ export default function Header() {
   const [locations, setLocations] = useState<MegaMenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Add scroll event listener
+  // Handle scroll effects
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return;
+    
     const handleScroll = () => {
-      if (window.scrollY > 10) {
+      if (window.scrollY > 50) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
@@ -131,19 +137,26 @@ export default function Header() {
   useEffect(() => {
     const fetchMenuData = async () => {
       try {
+        console.log('Header: Starting to fetch menu data using API URL:', config.apiUrl);
         setIsLoading(true);
         
-        // Fetch makes
-        const makesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/options/category/makes`);
+        // Check if we're on the server
+        if (typeof window === 'undefined') {
+          console.log('Header: Skipping API calls during server-side rendering');
+          return;
+        }
+        
+        // Fetch makes using API service
+        const makesResponse = await fetch(`${config.apiUrl}/options/category/makes`);
         const makesData = await makesResponse.json();
         
-        // Fetch body types
-        const typesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/options/category/bodyTypes`);
+        // Fetch body types using API service
+        const typesResponse = await fetch(`${config.apiUrl}/options/category/bodyTypes`);
         const typesData = await typesResponse.json();
         
-        // Fetch locations
-        const locationsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api'}/vehicles/locations/list`);
-        const locationsData = await locationsResponse.json();
+        // Fetch locations using vehicleAPI service
+        const locationsResponse = await vehicleAPI.getVehicleLocations();
+        const locationsData = locationsResponse.data;
         
         // Map makes data to menu items with images - limit to 8
         const mappedMakes = makesData.data.map((make: any) => {
@@ -152,7 +165,7 @@ export default function Header() {
           
                       return {
               name: make.name,
-              href: `/${currentLanguage}/cars?make=${encodeURIComponent(make.name)}`,
+              href: `/cars?make=${encodeURIComponent(make.name)}`,
               icon: '🚗', // Default icon as fallback
               imageUrl: imageUrl // Add image URL for brand logo
             };
@@ -173,7 +186,7 @@ export default function Header() {
           
           return {
             name: type.name,
-            href: `/${currentLanguage}/cars?bodyType=${encodeURIComponent(type.name)}`,
+            href: `/cars?bodyType=${encodeURIComponent(type.name)}`,
             icon
           };
         }).slice(0, 8);
@@ -195,7 +208,7 @@ export default function Header() {
           
           return {
             name: location.name,
-            href: `/${currentLanguage}/cars?location=${encodeURIComponent(location.name)}`,
+            href: `/cars?location=${encodeURIComponent(location.name)}`,
             icon: flag
           };
         }).slice(0, 8);
@@ -205,9 +218,11 @@ export default function Header() {
         setLocations(mappedLocations);
       } catch (error) {
         console.error('Error fetching menu data:', error);
-        // Fallback to static data if API fails
+        console.log('Using fallback static data for menu');
+        // Fallback to static data if API fails - we'll use the default values in the navItems
       } finally {
         setIsLoading(false);
+        console.log('Menu data loading complete. isLoading:', false);
       }
     };
     
@@ -215,56 +230,63 @@ export default function Header() {
   }, [currentLanguage]);
 
   // Create dynamic nav items with fetched data
-  const navItems: NavItem[] = [
-    { name: t('navigation.home'), href: `/${currentLanguage}` },
+  // Navigation items with hardcoded values
+  const navItems = [
+    { name: 'Home', href: `/` },
     { 
-      name: t('navigation.cars'), 
-      href: `/${currentLanguage}/cars`,
+      name: 'Cars', 
+      href: `/cars`,
       megaMenu: true,
       sections: [
         {
-          title: t('brands.title'),
+          title: 'Brands',
           items: isLoading ? [
-            { name: 'Toyota', href: `/${currentLanguage}/cars?make=Toyota`, icon: '🚗', imageUrl: '/brands/toyota.svg' },
-            { name: 'Honda', href: `/${currentLanguage}/cars?make=Honda`, icon: '🚗', imageUrl: '/brands/honda.svg' },
-            { name: 'Nissan', href: `/${currentLanguage}/cars?make=Nissan`, icon: '🚗', imageUrl: '/brands/nissan.svg' },
+            { name: 'Toyota', href: `/cars?make=Toyota`, icon: '🚗', imageUrl: '/brands/toyota.png' },
+            { name: 'Honda', href: `/cars?make=Honda`, icon: '🚗', imageUrl: '/brands/honda.png' },
+            { name: 'Nissan', href: `/cars?make=Nissan`, icon: '🚗', imageUrl: '/brands/nissan.png' },
+            { name: 'Mazda', href: `/cars?make=Mazda`, icon: '🚗', imageUrl: '/brands/mazda.png' },
+            { name: 'Lexus', href: `/cars?make=Lexus`, icon: '🚗', imageUrl: '/brands/lexus.png' },
+            { name: 'Subaru', href: `/cars?make=Subaru`, icon: '🚗', imageUrl: '/brands/subaru.png' },
           ] : makes.map(make => ({
-            ...make,
-            href: `/${currentLanguage}/cars?make=${encodeURIComponent(make.name.replace(`/${currentLanguage}/cars?make=`, ''))}`
+            ...make
+            // href is already set correctly in the makes array
           })),
-          viewAll: { name: t('brands.viewAll'), href: `/${currentLanguage}/cars?filter=makes` }
+          viewAll: { name: 'View All Brands', href: `/cars?filter=makes` }
         },
         {
-          title: t('search.bodyType'),
+          title: 'Body Types',
           items: isLoading ? [
-            { name: 'Sedan', href: `/${currentLanguage}/cars?bodyType=Sedan`, icon: '🚘' },
-            { name: 'SUV', href: `/${currentLanguage}/cars?bodyType=SUV`, icon: '🚙' },
-            { name: 'Truck', href: `/${currentLanguage}/cars?bodyType=Truck`, icon: '🚚' },
+            { name: 'Sedan', href: `/cars?bodyType=Sedan`, icon: '🚘' },
+            { name: 'SUV', href: `/cars?bodyType=SUV`, icon: '🚙' },
+            { name: 'Truck', href: `/cars?bodyType=Truck`, icon: '🛻' },
+            { name: 'Van', href: `/cars?bodyType=Van`, icon: '🚐' },
+            { name: 'Coupe', href: `/cars?bodyType=Coupe`, icon: '🏎️' },
+            { name: 'Convertible', href: `/cars?bodyType=Convertible`, icon: '🚗' },
           ] : vehicleTypes.map(type => ({
-            ...type,
-            href: `/${currentLanguage}/cars?bodyType=${encodeURIComponent(type.name.replace(`/${currentLanguage}/cars?bodyType=`, ''))}`
+            ...type
+            // href is already set correctly in the vehicleTypes array
           })),
-          viewAll: { name: t('search.allBodyTypes'), href: `/${currentLanguage}/cars?filter=types` }
+          viewAll: { name: 'View All Body Types', href: `/cars?filter=types` }
         },
         {
-          title: t('shipping.fromPort'),
+          title: 'From Ports',
           items: isLoading ? [
-            { name: 'Japan', href: `/${currentLanguage}/cars?location=Japan`, icon: '🇯🇵' },
-            { name: 'Singapore', href: `/${currentLanguage}/cars?location=Singapore`, icon: '🇸🇬' },
-            { name: 'Dubai', href: `/${currentLanguage}/cars?location=Dubai`, icon: '🇦🇪' },
+            { name: 'Japan', href: `/cars?location=Japan`, icon: '🇯🇵' },
+            { name: 'Singapore', href: `/cars?location=Singapore`, icon: '🇸🇬' },
+            { name: 'Dubai', href: `/cars?location=Dubai`, icon: '🇦🇪' },
           ] : locations.map(location => ({
-            ...location,
-            href: `/${currentLanguage}/cars?location=${encodeURIComponent(location.name.replace(`/${currentLanguage}/cars?location=`, ''))}`
+            ...location
+            // href is already set correctly in the locations array
           })),
-          viewAll: { name: t('shipping.viewSchedule'), href: `/${currentLanguage}/cars?filter=countries` }
+          viewAll: { name: 'View Schedule', href: `/cars?filter=countries` }
         }
       ]
     },
-    { name: t('navigation.auction'), href: `/${currentLanguage}/auction` },
-    { name: t('navigation.about'), href: `/${currentLanguage}/about` },
-    { name: t('navigation.banking'), href: `/${currentLanguage}/banking` },
-    { name: t('navigation.contact'), href: `/${currentLanguage}/contact` },
-    { name: t('navigation.faq'), href: `/${currentLanguage}/faq` },
+    { name: 'Auction', href: `/auction` },
+    { name: 'About', href: `/about` },
+    { name: 'Banking', href: `/banking` },
+    { name: 'Contact', href: `/contact` },
+    { name: 'FAQ', href: `/faq` },
   ];
 
   return (
@@ -276,11 +298,11 @@ export default function Header() {
             <div className="flex items-center space-x-6 text-sm">
               <div className="flex items-center">
                 <MapPin size={14} className="mr-1.5" />
-                <span>{t('footer.address')}</span>
+                <span>123 Export Street, Tokyo</span>
               </div>
               <div className="flex items-center">
                 <Phone size={14} className="mr-1.5" />
-                <span>{t('footer.phone')}</span>
+                <span>+81 3-1234-5678</span>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -288,11 +310,11 @@ export default function Header() {
               
               <div className="h-4 w-px bg-white/30"></div>
               
-              <Link href={`/${currentLanguage}/login`} className="text-sm hover:text-gray-200 transition-colors">
-                {t('navigation.login')}
+              <Link href="/login" className="text-sm hover:text-gray-200 transition-colors">
+                Login
               </Link>
-              <Link href={`/${currentLanguage}/register`} className="text-sm hover:text-gray-200 transition-colors">
-                {t('navigation.register')}
+              <Link href="/register" className="text-sm hover:text-gray-200 transition-colors">
+                Register
               </Link>
             </div>
           </div>
@@ -308,7 +330,7 @@ export default function Header() {
         <div className="max-w-[1400px] mx-auto px-4">
           <div className="flex justify-between items-center">
             {/* Logo */}
-            <Link href={`/${currentLanguage}`} className="flex items-center">
+            <Link href="/" className="flex items-center">
               <div className="bg-red-600 text-white rounded-md w-8 h-8 flex items-center justify-center mr-2">
                 <span className="font-bold">SS</span>
               </div>
@@ -352,7 +374,7 @@ export default function Header() {
                                       className="flex items-center py-1.5 hover:text-red-600 transition-colors"
                                       onClick={() => setActiveDropdown(null)}
                                     >
-                                      {section.title === t('brands.title') && subItem.imageUrl ? (
+                                      {section.title === 'Brands' && subItem.imageUrl ? (
                                         <div className="w-6 h-6 mr-2 flex items-center justify-center">
                                           <img 
                                             src={subItem.imageUrl}
@@ -409,8 +431,8 @@ export default function Header() {
                 asChild
                 className="bg-red-600 hover:bg-red-700 text-white rounded-md"
               >
-                <Link href={`/${currentLanguage}/contact`} className="flex items-center">
-                  {t('navigation.getQuote')}
+                <Link href="/contact" className="flex items-center">
+                  Get Quote
                 </Link>
               </Button>
             </div>
@@ -479,7 +501,7 @@ export default function Header() {
                                               className="flex items-center py-1.5 text-base text-gray-600 hover:text-red-600"
                                               onClick={() => setIsMobileMenuOpen(false)}
                                             >
-                                              {section.title === t('brands.title') && subItem.imageUrl ? (
+                                              {section.title === 'Brands' && subItem.imageUrl ? (
                                                 <div className="w-6 h-6 mr-2 flex items-center justify-center">
                                                   <img 
                                                     src={subItem.imageUrl}
@@ -537,7 +559,7 @@ export default function Header() {
                   
                   <div className="p-4 border-t border-gray-100">
                     <Button asChild className="w-full bg-red-600 hover:bg-red-700">
-                      <Link href={`/${currentLanguage}/contact`} onClick={() => setIsMobileMenuOpen(false)}>
+                      <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)}>
                         {t('navigation.getQuote')}
                       </Link>
                     </Button>

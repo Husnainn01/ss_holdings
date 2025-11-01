@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
+import { getItem, removeItem } from "./localStorage"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -34,7 +35,8 @@ export function updateImageUrl(url: string | undefined): string {
 
   // If it's a relative path starting with 'uploads/', convert to CDN URL
   if (url.startsWith('uploads/')) {
-    return `https://cdn.ss.holdings/${url}`;
+    const { CDN_URL } = require('@/config');
+    return `${CDN_URL}/${url}`;
   }
 
   // If it's a path without protocol, add https://
@@ -101,44 +103,57 @@ export function cleanCachedImageData(): void {
     if (typeof window === 'undefined') return;
     
     // Find and clear any cached image data in localStorage that contains invalid paths
-    Object.keys(localStorage).forEach(key => {
+    // Skip this on server-side
+    if (window.localStorage) {
       try {
-        const value = localStorage.getItem(key);
-        if (!value) return;
-        
-        // Check if the value contains invalid paths
-        if (
-          value.includes('/Users/') || 
-          value.includes('/Desktop/') || 
-          value.includes('/backend/uploads/')
-        ) {
-          console.log(`Removing invalid cached data: ${key}`);
-          localStorage.removeItem(key);
-        }
+        Object.keys(window.localStorage).forEach(key => {
+          try {
+            const value = getItem(key);
+            if (!value) return;
+            
+            // Check if the value contains invalid paths
+            if (
+              value.includes('/Users/') || 
+              value.includes('/Desktop/') || 
+              value.includes('/backend/uploads/')
+            ) {
+              console.log(`Removing invalid cached data: ${key}`);
+              removeItem(key);
+            }
+          } catch (e) {
+            // Ignore errors when accessing localStorage items
+          }
+        });
       } catch (e) {
-        // Ignore errors when accessing localStorage items
+        // Ignore errors if localStorage is not accessible
       }
-    });
+    }
     
     // Clear any image cache in sessionStorage as well
-    Object.keys(sessionStorage).forEach(key => {
+    if (window.sessionStorage) {
       try {
-        const value = sessionStorage.getItem(key);
-        if (!value) return;
-        
-        // Check if the value contains invalid paths
-        if (
-          value.includes('/Users/') || 
-          value.includes('/Desktop/') || 
-          value.includes('/backend/uploads/')
-        ) {
-          console.log(`Removing invalid cached data: ${key}`);
-          sessionStorage.removeItem(key);
-        }
+        Object.keys(window.sessionStorage).forEach(key => {
+          try {
+            const value = window.sessionStorage.getItem(key);
+            if (!value) return;
+            
+            // Check if the value contains invalid paths
+            if (
+              value.includes('/Users/') || 
+              value.includes('/Desktop/') || 
+              value.includes('/backend/uploads/')
+            ) {
+              console.log(`Removing invalid cached data: ${key}`);
+              window.sessionStorage.removeItem(key);
+            }
+          } catch (e) {
+            // Ignore errors when accessing sessionStorage items
+          }
+        });
       } catch (e) {
-        // Ignore errors when accessing sessionStorage items
+        // Ignore errors when accessing sessionStorage
       }
-    });
+    }
     
     // If the browser supports Cache API, clear image caches
     if ('caches' in window) {
