@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { getItem } from '@/lib/localStorage';
 import config from '@/config';
 

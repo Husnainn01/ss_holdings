@@ -367,7 +367,7 @@ export default function Header() {
                               <div key={section.title} className={`p-4 ${sectionIndex < (item.sections?.length || 0) - 1 ? 'border-r border-gray-100' : ''}`}>
                                 <h3 className="font-medium text-lg mb-3">{section.title}</h3>
                                 <div className="space-y-2">
-                                  {section.items.map((subItem, subIndex) => (
+                                  {section.items.map((subItem) => (
                                     <Link 
                                       key={subItem.name} 
                                       href={subItem.href}
@@ -376,13 +376,15 @@ export default function Header() {
                                     >
                                       {section.title === 'Brands' && subItem.imageUrl ? (
                                         <div className="w-6 h-6 mr-2 flex items-center justify-center">
-                                          <img 
+                                          <Image 
                                             src={subItem.imageUrl}
                                             alt={subItem.name}
+                                            width={24}
+                                            height={24}
                                             className="max-w-full max-h-full object-contain"
-                                            onError={(e) => {
-                                              e.currentTarget.style.display = 'none';
-                                              const nextElement = e.currentTarget.nextSibling as HTMLElement;
+                                            onError={(event) => {
+                                              event.currentTarget.style.display = 'none';
+                                              const nextElement = event.currentTarget.nextSibling as HTMLElement;
                                               if (nextElement) nextElement.style.display = 'block';
                                             }}
                                           />
@@ -494,7 +496,7 @@ export default function Header() {
                                       <div key={section.title} className="mt-2">
                                         <h4 className="font-medium text-base px-2 py-1 bg-gray-50">{section.title}</h4>
                                         <div className="pl-4 py-2 border-l-2 border-gray-100 ml-2 space-y-2">
-                                          {section.items.map((subItem, subIndex) => (
+                                          {section.items.map((subItem) => (
                                             <Link 
                                               key={subItem.name} 
                                               href={subItem.href}
@@ -503,13 +505,15 @@ export default function Header() {
                                             >
                                               {section.title === 'Brands' && subItem.imageUrl ? (
                                                 <div className="w-6 h-6 mr-2 flex items-center justify-center">
-                                                  <img 
+                                                  <Image 
                                                     src={subItem.imageUrl}
                                                     alt={subItem.name}
+                                                    width={24}
+                                                    height={24}
                                                     className="max-w-full max-h-full object-contain"
-                                                    onError={(e) => {
-                                                      e.currentTarget.style.display = 'none';
-                                                      const nextElement = e.currentTarget.nextSibling as HTMLElement;
+                                                    onError={(event) => {
+                                                      event.currentTarget.style.display = 'none';
+                                                      const nextElement = event.currentTarget.nextSibling as HTMLElement;
                                                       if (nextElement) nextElement.style.display = 'block';
                                                     }}
                                                   />

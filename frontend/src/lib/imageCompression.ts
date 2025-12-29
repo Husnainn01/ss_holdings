@@ -110,8 +110,10 @@ export const getOptimalCompressionOptions = (file: File): CompressionOptions => 
   };
 };
 
-export default {
+const imageCompressionUtils = {
   compressImageIfNeeded,
   compressMultipleImages,
   getOptimalCompressionOptions,
-}; 
+};
+
+export default imageCompressionUtils;

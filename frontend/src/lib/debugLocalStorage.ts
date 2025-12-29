@@ -11,16 +11,16 @@ export function setupLocalStorageDebug() {
   const originalGlobal = global;
   
   // Create a trap for localStorage access
-  const handler = {
-    get: function(target: any, prop: string) {
+  const handler: ProxyHandler<typeof global> = {
+    get: (target, prop: keyof typeof global) => {
       if (prop === 'localStorage') {
         console.error('localStorage accessed during server-side rendering');
         console.error(new Error().stack);
         
         // Return a mock localStorage that logs access
-        return new Proxy({}, {
-          get: function(target: any, method: string) {
-            return function(...args: any[]) {
+        return new Proxy<Record<string, unknown>>({}, {
+          get: (_target, method: string) => {
+            return (...args: unknown[]) => {
               console.error(`localStorage.${method} called with:`, args);
               console.error(new Error().stack);
               return null;
@@ -34,10 +34,11 @@ export function setupLocalStorageDebug() {
 
   // Apply the proxy
   try {
-    // @ts-ignore - This is a hack to debug
-    global = new Proxy(originalGlobal, handler);
-  } catch (e) {
-    console.error('Failed to set up localStorage debug proxy:', e);
+    const proxiedGlobal = new Proxy(originalGlobal, handler);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (global as any) = proxiedGlobal;
+  } catch (error) {
+    console.error('Failed to set up localStorage debug proxy:', error);
   }
 }
 

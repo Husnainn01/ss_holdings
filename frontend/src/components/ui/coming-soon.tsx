@@ -18,7 +18,7 @@ export function ComingSoon({
   showNotifyButton = true,
   onNotifyClick
 }: ComingSoonProps) {
-  const { currentLanguage } = useLanguage();
+  useLanguage();
   const { t } = useTranslation(); // Remove the argument as it's not expected
 
   return (

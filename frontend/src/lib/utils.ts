@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { getItem, removeItem } from "./localStorage"
+import { CDN_URL } from '@/config'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -36,7 +37,6 @@ export function updateImageUrl(url: string | undefined): string {
 
   // If it's a relative path starting with 'uploads/', convert to CDN URL
   if (url.startsWith('uploads/')) {
-    const { CDN_URL } = require('@/config');
     return `${CDN_URL}/${url}`;
   }
 
