@@ -31,8 +31,6 @@ export default function HeroSection({
   buttons,
   height = "h-[400px]"
 }: HeroSectionProps) {
-  const currentLanguage = 'en';
-  
   // Use hardcoded values if title/subtitle not provided via props
   const heroTitle = title || "Premium Vehicle Export Worldwide";
   const heroSubtitle = subtitle || "Find and export your dream car with our trusted global shipping service";

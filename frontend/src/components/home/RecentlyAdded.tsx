@@ -45,15 +45,13 @@ const t = (key: string) => {
   return translations[key] || key;
 };
 
-export default function RecentlyAdded({ 
-  cars = [], 
+export default function RecentlyAdded({
+  cars,
   title,
   showViewMore = true 
 }: RecentlyAddedProps) {
-  const currentLanguage = 'en';
   const [isHovered, setIsHovered] = useState(false);
   
-  // Animation variants
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
