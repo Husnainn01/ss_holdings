@@ -4,26 +4,13 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuTrigger,
-// } from "@/components/ui/dropdown-menu";
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Phone, Menu, X, ChevronDown, Globe, MapPin } from 'lucide-react';
+import { Phone, Menu, X, ChevronDown, MapPin } from 'lucide-react';
 import Image from 'next/image';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { useTranslation } from '@/app/i18n/client';
-// Import useLanguage from our simplified provider
-import { useLanguage } from '@/components/providers/LanguageProvider';
 import config from '@/config';
 import { vehicleAPI } from '@/services/api';
-
-interface MenuItem {
-  name: string;
-  href: string;
-}
 
 interface MegaMenuItem {
   name: string;
@@ -32,79 +19,21 @@ interface MegaMenuItem {
   imageUrl?: string;
 }
 
-interface MegaMenuSection {
-  title: string;
-  items: MegaMenuItem[];
-  viewAll?: {
-    name: string;
-    href: string;
-  };
-}
-
-interface NavItem {
+interface ApiMake {
   name: string;
-  href: string;
-  megaMenu?: boolean;
-  sections?: MegaMenuSection[];
+  imageUrl?: string;
+  svgUrl?: string;
 }
 
-const MegaMenu = ({ sections }: { sections: MegaMenuSection[] }) => {
-  return (
-    <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 w-screen max-w-5xl bg-white rounded-lg shadow-lg overflow-hidden z-50">
-      <div className="grid grid-cols-3 gap-2 p-4">
-        {sections.map((section, index) => (
-          <div key={index} className="p-2">
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">{section.title}</h3>
-            <ul className="space-y-2">
-              {section.items.map((item, idx) => (
-                <li key={idx}>
-                  <Link href={item.href} className="flex items-center gap-2 p-2 hover:bg-gray-100 rounded-md transition-colors">
-                    {item.imageUrl ? (
-                      <Image 
-                        src={item.imageUrl}
-                        width={20}
-                        height={20}
-                        alt={item.name}
-                        className="w-5 h-5 object-contain"
-                        onError={(e) => {
-                          // Fallback to emoji if image fails to load
-                          e.currentTarget.style.display = 'none';
-                          const parent = e.currentTarget.parentElement;
-                          if (parent) {
-                            const span = document.createElement('span');
-                            span.textContent = item.icon;
-                            span.className = 'w-5 h-5 flex items-center justify-center';
-                            parent.insertBefore(span, parent.firstChild);
-                          }
-                        }}
-                      />
-                    ) : (
-                      <span className="w-5 h-5 flex items-center justify-center">{item.icon}</span>
-                    )}
-                    <span>{item.name}</span>
-                  </Link>
-                </li>
-              ))}
-              {section.viewAll && (
-                <li className="mt-4">
-                  <Link 
-                    href={section.viewAll.href} 
-                    className="flex items-center justify-center w-full p-2 text-sm text-blue-600 hover:bg-blue-50 rounded-md transition-colors border border-blue-200"
-                  >
-                    {section.viewAll.name}
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
+interface ApiVehicleType {
+  name: string;
+}
+
+interface ApiLocation {
+  name: string;
+}
 
 export default function Header() {
-  const { currentLanguage } = useLanguage();
   const { t } = useTranslation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -148,31 +77,31 @@ export default function Header() {
         
         // Fetch makes using API service
         const makesResponse = await fetch(`${config.apiUrl}/options/category/makes`);
-        const makesData = await makesResponse.json();
+        const makesData: { data: ApiMake[] } = await makesResponse.json();
         
         // Fetch body types using API service
         const typesResponse = await fetch(`${config.apiUrl}/options/category/bodyTypes`);
-        const typesData = await typesResponse.json();
+        const typesData: { data: ApiVehicleType[] } = await typesResponse.json();
         
         // Fetch locations using vehicleAPI service
         const locationsResponse = await vehicleAPI.getVehicleLocations();
-        const locationsData = locationsResponse.data;
+        const locationsData: ApiLocation[] = locationsResponse.data ?? [];
         
         // Map makes data to menu items with images - limit to 8
-        const mappedMakes = makesData.data.map((make: any) => {
+        const mappedMakes = makesData.data.map((make) => {
           // Use SVG if available, otherwise use image or fallback
           const imageUrl = make.svgUrl || make.imageUrl || `/brands/${make.name.toLowerCase()}.svg`;
           
-                      return {
-              name: make.name,
-              href: `/cars?make=${encodeURIComponent(make.name)}`,
-              icon: '🚗', // Default icon as fallback
-              imageUrl: imageUrl // Add image URL for brand logo
-            };
+          return {
+            name: make.name,
+            href: `/cars?make=${encodeURIComponent(make.name)}`,
+            icon: '🚗', // Default icon as fallback
+            imageUrl
+          };
         }).slice(0, 8);
         
         // Map types data to menu items - limit to 8
-        const mappedTypes = typesData.data.map((type: any) => {
+        const mappedTypes = typesData.data.map((type) => {
           // Map body types to appropriate icons
           let icon = '🚗';
           if (type.name.toLowerCase().includes('suv')) icon = '🚙';
@@ -192,34 +121,34 @@ export default function Header() {
         }).slice(0, 8);
         
         // Map locations data to menu items with flags - limit to 8
-        const mappedLocations = locationsData.map((location: any) => {
+        const mappedLocations = locationsData.map((location) => {
           // Map common countries to flag emojis
+          const name = location.name ?? '';
           let flag = '🏳️';
-          if (location.name.includes('Japan')) flag = '🇯🇵';
-          else if (location.name.includes('Singapore')) flag = '🇸🇬';
-          else if (location.name.includes('Dubai') || location.name.includes('UAE')) flag = '🇦🇪';
-          else if (location.name.includes('Thailand')) flag = '🇹🇭';
-          else if (location.name.includes('Korea')) flag = '🇰🇷';
-          else if (location.name.includes('Australia')) flag = '🇦🇺';
-          else if (location.name.includes('New Zealand')) flag = '🇳🇿';
-          else if (location.name.includes('Canada')) flag = '🇨🇦';
-          else if (location.name.includes('United States') || location.name.includes('USA')) flag = '🇺🇸';
-          else if (location.name.includes('United Kingdom') || location.name.includes('UK')) flag = '🇬🇧';
+          if (name.includes('Japan')) flag = '🇯🇵';
+          else if (name.includes('Singapore')) flag = '🇸🇬';
+          else if (name.includes('Dubai') || name.includes('UAE')) flag = '🇦🇪';
+          else if (name.includes('Thailand')) flag = '🇹🇭';
+          else if (name.includes('Korea')) flag = '🇰🇷';
+          else if (name.includes('Australia')) flag = '🇦🇺';
+          else if (name.includes('New Zealand')) flag = '🇳🇿';
+          else if (name.includes('Canada')) flag = '🇨🇦';
+          else if (name.includes('United States') || name.includes('USA')) flag = '🇺🇸';
+          else if (name.includes('United Kingdom') || name.includes('UK')) flag = '🇬🇧';
           
           return {
-            name: location.name,
-            href: `/cars?location=${encodeURIComponent(location.name)}`,
+            name,
+            href: `/cars?location=${encodeURIComponent(name)}`,
             icon: flag
           };
         }).slice(0, 8);
-        
+
         setMakes(mappedMakes);
         setVehicleTypes(mappedTypes);
         setLocations(mappedLocations);
       } catch (error) {
         console.error('Error fetching menu data:', error);
         console.log('Using fallback static data for menu');
-        // Fallback to static data if API fails - we'll use the default values in the navItems
       } finally {
         setIsLoading(false);
         console.log('Menu data loading complete. isLoading:', false);
@@ -227,7 +156,7 @@ export default function Header() {
     };
     
     fetchMenuData();
-  }, [currentLanguage]);
+  }, []);
 
   // Create dynamic nav items with fetched data
   // Navigation items with hardcoded values

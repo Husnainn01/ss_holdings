@@ -12,15 +12,10 @@ import {
   Phone, 
   Mail, 
   ArrowUp,
-  Send,
-  Youtube
+  Send
 } from 'lucide-react';
-import { useTranslation } from '@/app/i18n/client';
-import { useLanguage } from '@/components/providers/LanguageProvider';
 
 export default function Footer() {
-  const { currentLanguage } = useLanguage();
-  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [email, setEmail] = useState('');

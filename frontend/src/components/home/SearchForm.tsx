@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
-import { Search, Filter, ChevronRight, Car, Calendar, CreditCard, Gauge, Loader2 } from "lucide-react";
+import { Search, Filter, ChevronRight, Car, Calendar, CreditCard, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { vehicleAPI } from '@/services/api';
 import { getOptionsByCategory, Option } from '@/services/optionsAPI';
@@ -35,7 +35,6 @@ const t = (key: string) => {
 };
 
 export default function SearchForm({ className }: SearchFormProps) {
-  const currentLanguage = 'en';
   const router = useRouter();
   const [isAdvancedSearch, setIsAdvancedSearch] = useState(false);
   const [searchParams, setSearchParams] = useState({
