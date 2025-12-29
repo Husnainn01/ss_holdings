@@ -19,6 +19,24 @@ if (typeof window === 'undefined') {
     toString: function() { return this.href; }
   };
   
+  const mockDocument = {
+    documentElement: {
+      clientWidth: 1920,
+      clientHeight: 1080
+    },
+    createElement: () => ({ style: {} }),
+    querySelector: () => null,
+    querySelectorAll: () => [],
+    head: {
+      appendChild: () => {}
+    },
+    body: {
+      appendChild: () => {}
+    }
+  };
+
+  global.document = global.document || mockDocument;
+
   // Create a mock window with essential browser APIs
   const mockWindow = {
     location: mockLocation,
@@ -34,12 +52,7 @@ if (typeof window === 'undefined') {
       back: function() {},
       forward: function() {}
     },
-    document: {
-      documentElement: {
-        clientWidth: 1920,
-        clientHeight: 1080
-      }
-    }
+    document: global.document
   };
   
   // Add to global
