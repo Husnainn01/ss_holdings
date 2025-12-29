@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { getItem } from '@/lib/localStorage';
-import config, { getApiBaseUrl } from '@/config';
+import config from '@/config';
 
 // Use the API URL from our centralized config
 const API_URL = config.apiUrl;
@@ -33,6 +33,13 @@ export type OptionCategory =
   | 'conditionTypes'
   | 'months'
   | 'offerTypes';
+
+interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  pages: number;
+}
 
 // Get options by category (public endpoint - no auth required)
 export const getOptionsByCategory = async (category: OptionCategory): Promise<Option[]> => {
@@ -71,7 +78,7 @@ export const getAllOptions = async (
   category?: OptionCategory,
   page: number = 1,
   limit: number = 50
-): Promise<{ data: Option[]; pagination: any }> => {
+): Promise<{ data: Option[]; pagination: Pagination }> => {
   try {
     const token = getItem('adminAuth');
     if (!token) throw new Error('No authentication token');

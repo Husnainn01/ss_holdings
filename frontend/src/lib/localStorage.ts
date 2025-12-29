@@ -11,7 +11,7 @@ export const isLocalStorageAvailable = (): boolean => {
     window.localStorage.setItem(testKey, testKey);
     window.localStorage.removeItem(testKey);
     return true;
-  } catch (e) {
+  } catch {
     return false;
   }
 };
@@ -21,8 +21,8 @@ export const getItem = (key: string): string | null => {
   if (!isLocalStorageAvailable()) return null;
   try {
     return window.localStorage.getItem(key);
-  } catch (e) {
-    console.error('Error accessing localStorage:', e);
+  } catch (error) {
+    console.error('Error accessing localStorage:', error);
     return null;
   }
 };
@@ -33,8 +33,8 @@ export const setItem = (key: string, value: string): boolean => {
   try {
     window.localStorage.setItem(key, value);
     return true;
-  } catch (e) {
-    console.error('Error setting localStorage item:', e);
+  } catch (error) {
+    console.error('Error setting localStorage item:', error);
     return false;
   }
 };
@@ -45,8 +45,8 @@ export const removeItem = (key: string): boolean => {
   try {
     window.localStorage.removeItem(key);
     return true;
-  } catch (e) {
-    console.error('Error removing localStorage item:', e);
+  } catch (error) {
+    console.error('Error removing localStorage item:', error);
     return false;
   }
 };

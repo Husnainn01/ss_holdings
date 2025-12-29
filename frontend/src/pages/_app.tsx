@@ -10,7 +10,8 @@ const setupSafeLocalStorage = () => {
     const testKey = '__test__';
     window.localStorage.setItem(testKey, testKey);
     window.localStorage.removeItem(testKey);
-  } catch (e) {
+  } catch (error) {
+    console.warn('localStorage unavailable, applying mock implementation:', error);
     // If localStorage is not available, create a polyfill
     const storage: Record<string, string> = {};
     

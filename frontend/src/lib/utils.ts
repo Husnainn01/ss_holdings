@@ -29,8 +29,9 @@ export function updateImageUrl(url: string | undefined): string {
     new URL(url);
     // If we get here, the URL is valid
     return url;
-  } catch (e) {
+  } catch (error) {
     // Not a valid URL, let's try to fix it
+    console.warn('Invalid URL detected, attempting to normalize:', error);
   }
 
   // If it's a relative path starting with 'uploads/', convert to CDN URL
@@ -120,12 +121,12 @@ export function cleanCachedImageData(): void {
               console.log(`Removing invalid cached data: ${key}`);
               removeItem(key);
             }
-          } catch (e) {
-            // Ignore errors when accessing localStorage items
+          } catch (error) {
+            console.warn('Unable to inspect cached localStorage item:', error);
           }
         });
-      } catch (e) {
-        // Ignore errors if localStorage is not accessible
+      } catch (error) {
+        console.warn('localStorage access error during cache cleanup:', error);
       }
     }
     
@@ -146,12 +147,12 @@ export function cleanCachedImageData(): void {
               console.log(`Removing invalid cached data: ${key}`);
               window.sessionStorage.removeItem(key);
             }
-          } catch (e) {
-            // Ignore errors when accessing sessionStorage items
+          } catch (error) {
+            console.warn('Unable to inspect cached sessionStorage item:', error);
           }
         });
-      } catch (e) {
-        // Ignore errors when accessing sessionStorage
+      } catch (error) {
+        console.warn('sessionStorage access error during cache cleanup:', error);
       }
     }
     

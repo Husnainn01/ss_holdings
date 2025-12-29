@@ -1,7 +1,9 @@
-import axios, { InternalAxiosRequestConfig } from 'axios';
+import axios, { InternalAxiosRequestConfig, AxiosError } from 'axios';
 import { getItem } from '@/lib/localStorage';
-import config, { getApiBaseUrl } from '@/config';
+import { getApiBaseUrl } from '@/config';
 
+type UserPayload = Record<string, unknown>;
+type VehicleQueryParams = Record<string, string | number | boolean | undefined>;
 
 // Get the API base URL
 const apiBaseUrl = getApiBaseUrl();
@@ -21,16 +23,17 @@ const api = axios.create({
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Check if we're in the browser
-    if (typeof window !== 'undefined') {
-      const token = getItem('adminAuth');
-      if (token) {
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    if (typeof window === 'undefined') {
+      return config;
+    }
+    const token = getItem('adminAuth');
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error: any) => Promise.reject(error)
+  (error: AxiosError) => Promise.reject(error)
 );
 
 // Auth API
@@ -101,7 +104,7 @@ export const userAPI = {
     return api.get(`/admin/users/${id}`);
   },
   
-  createUser: (userData: any) => {
+  createUser: (userData: UserPayload) => {
     // Skip API calls during server-side rendering
     if (typeof window === 'undefined') {
       console.log('Skipping user createUser API call during server-side rendering');
@@ -110,7 +113,7 @@ export const userAPI = {
     return api.post('/auth/register', userData);
   },
   
-  updateUser: (id: string, userData: any) => {
+  updateUser: (id: string, userData: UserPayload) => {
     // Skip API calls during server-side rendering
     if (typeof window === 'undefined') {
       console.log('Skipping user updateUser API call during server-side rendering');
@@ -197,7 +200,7 @@ export const roleAPI = {
 
 // Vehicle API
 export const vehicleAPI = {
-  getVehicles: (params?: any) => {
+  getVehicles: (params?: VehicleQueryParams) => {
     // Skip API calls during server-side rendering
     if (typeof window === 'undefined') {
       console.log('Skipping getVehicles API call during server-side rendering');
