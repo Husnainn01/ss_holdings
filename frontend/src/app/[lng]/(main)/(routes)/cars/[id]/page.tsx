@@ -34,7 +34,7 @@ function isValidObjectId(id: string): boolean {
 export default function CarDetailPage() {
   // Use useParams hook to get the id parameter in Client Component
   const params = useParams();
-  const id = params.id as string;
+  const id = (params?.id ?? '') as string;
   
   // State hooks
   const [car, setCar] = useState<IVehicle | null>(null);

@@ -75,10 +75,10 @@ const PERMISSION_LABELS: Record<string, string> = {
   'manage_settings': 'Manage Settings'
 };
 
-export default function UserRolesPage() {
+export default function ManageUserRolesPage() {
   const params = useParams();
   const router = useRouter();
-  const userId = params.id as string;
+  const userId = (params?.id ?? '') as string;
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

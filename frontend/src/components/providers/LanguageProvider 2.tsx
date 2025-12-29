@@ -25,7 +25,7 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? '/';
   const [currentLanguage, setCurrentLanguage] = useState<string>(fallbackLng);
 
   // Extract language from pathname

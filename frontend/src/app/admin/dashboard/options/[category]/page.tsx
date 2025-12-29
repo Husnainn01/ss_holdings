@@ -54,7 +54,7 @@ const optionCategories: Record<string, { title: string; description: string }> =
 export default function CategoryOptionsPage() {
   const params = useParams();
   const router = useRouter();
-  const category = params.category as string;
+  const category = (params?.category ?? '') as string;
   
   // Check if the category is valid
   const isValidCategory = Object.keys(optionCategories).includes(category);

@@ -45,7 +45,7 @@ export function useTranslation() {
     t,
     i18n: {
       language: 'en',
-      changeLanguage: () => Promise.resolve(),
+      changeLanguage: async (_language?: string) => Promise.resolve(),
       resolvedLanguage: 'en'
     },
     ready: true
@@ -55,7 +55,7 @@ export function useTranslation() {
 // Dummy i18next object
 const i18next = {
   language: 'en',
-  changeLanguage: () => Promise.resolve(),
+  changeLanguage: async (_language?: string) => Promise.resolve(),
   t
 };
 

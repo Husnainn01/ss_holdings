@@ -24,7 +24,7 @@ interface UserData {
 export default function EditUserPage() {
   const params = useParams();
   const router = useRouter();
-  const userId = params.id as string;
+  const userId = (params?.id ?? '') as string;
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);

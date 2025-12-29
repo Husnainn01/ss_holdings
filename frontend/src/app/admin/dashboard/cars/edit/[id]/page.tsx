@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 
 export default function EditCar() {
   const params = useParams();
-  const carId = params.id as string;
+  const carId = (params?.id ?? '') as string;
   
   return (
     <div className="space-y-6">
